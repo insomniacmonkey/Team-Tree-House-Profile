@@ -1,16 +1,14 @@
 const { LowSync } = require('lowdb');
-const { JSONFileSync } = require('lowdb/node'); // Correct import
+const { JSONFileSync } = require('lowdb/node');
 const fs = require('fs');
 
 const dbFilePath = './data/points.json';
 console.log("🔹 Starting trackPoints.js...");
 
-// Step 1: Ensure the `data/` directory exists
+// Ensure `data/` directory exists
 if (!fs.existsSync('./data')) {
     console.log("📁 'data/' directory not found. Creating now...");
     fs.mkdirSync('./data');
-} else {
-    console.log("✅ 'data/' directory exists.");
 }
 
 // Step 2: Ensure `points.json` exists with default data before LowDB reads it
@@ -25,18 +23,15 @@ if (!fs.existsSync(dbFilePath)) {
     console.log("✅ 'points.json' exists.");
 }
 
-// Step 3: Set up LowDB **with default data passed on initialization**
+// Set up LowDB (UNCHANGED)
 console.log("🔹 Initializing LowDB...");
 const adapter = new JSONFileSync(dbFilePath);
 const db = new LowSync(adapter, { defaultData: { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] } });
 
-// Step 4: Read database **after assigning default data**
+// Read database **after assigning default data**
 db.read();
 
-// Step 5: Debugging - Ensure database is properly initialized
-console.log("🔍 Database state after read():", JSON.stringify(db.data, null, 2));
-
-// Step 6: If `db.data` is still empty, force default values
+// Ensure `db.data` is properly initialized
 if (!db.data || Object.keys(db.data).length === 0) {
     console.log("⚠️ Database is empty! Assigning default data...");
     db.data = { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] };
@@ -64,31 +59,54 @@ function trackPoints(data) {
 
     let pointsGained = {};
     let totalPointsGained = newPoints.total - (lastRecorded.total || 0);
+    let newCategories = [];
 
     Object.keys(newPoints).forEach((category) => {
         if (category !== 'total') {
             const newPointsInCategory = newPoints[category];
             const lastPointsInCategory = lastRecorded.categories?.[category] || 0;
+
             if (newPointsInCategory > lastPointsInCategory) {
                 pointsGained[category] = newPointsInCategory - lastPointsInCategory;
             }
+
+            if (!(category in lastRecorded.categories)) {
+                console.log(`🆕 New category detected: "${category}" with ${newPointsInCategory} points.`);
+                newCategories.push({ category, points: newPointsInCategory });
+                db.data.lastRecorded.categories[category] = newPointsInCategory;
+            }
         }
     });
+
+    if (newCategories.length > 0) {
+        db.write();
+    }
 
     if (totalPointsGained > 0) {
         console.log(`🎉 New total points earned: ${totalPointsGained}`);
         console.log("📊 Breakdown of points gained:", pointsGained);
 
-        db.data.history.push({
-            date: new Date().toISOString(),
-            totalGained: totalPointsGained,
-            pointsBreakdown: pointsGained
-        });
+        const today = new Date().toISOString().split("T")[0];
 
-        db.data.lastRecorded = {
-            total: newPoints.total,
-            categories: newPoints
-        };
+        let existingEntry = db.data.history.find(entry => entry.date.startsWith(today));
+
+        if (existingEntry) {
+            console.log(`🔄 Merging points with existing entry for ${today}`);
+            existingEntry.totalGained += totalPointsGained;
+
+            Object.keys(pointsGained).forEach(category => {
+                existingEntry.pointsBreakdown[category] = 
+                    (existingEntry.pointsBreakdown[category] || 0) + pointsGained[category];
+            });
+        } else {
+            db.data.history.push({
+                date: new Date().toISOString(),
+                totalGained: totalPointsGained,
+                pointsBreakdown: pointsGained
+            });
+        }
+
+        db.data.lastRecorded.total = newPoints.total;
         db.write();
         console.log("✅ Database updated with new points.");
     } else {
