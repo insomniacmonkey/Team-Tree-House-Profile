@@ -8,7 +8,6 @@
   "version": "1.0.0",
   "description": "A small project to keep track of what I am learning.",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
