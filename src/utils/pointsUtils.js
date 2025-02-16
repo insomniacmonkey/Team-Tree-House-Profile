@@ -7,7 +7,7 @@ const getSundayOfWeek = (date) => {
     return toCentralDate(sunday); // Ensure YYYY-MM-DD format
 };
 
-// ✅ Get the first day of the month in CST/CDT (fixed)
+// ✅ Get the first day of the month in CST/CDT
 const getFirstOfMonth = (date) => {
     const cstDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }));
     return toCentralDate(new Date(cstDate.getFullYear(), cstDate.getMonth(), 1, 0, 0, 0, 0)); // Ensure YYYY-MM-DD format
@@ -39,7 +39,7 @@ export const filterHistory = (history, activeTab) => {
         }
 
         if (activeTab === "This Month") {
-            return entryCST >= startOfThisMonth && entryCST <= todayCST; // 🔥 FIXED: Corrected date format for comparison
+            return entryCST >= startOfThisMonth && entryCST <= todayCST;
         }
 
         if (activeTab === "This Year") {
@@ -50,14 +50,14 @@ export const filterHistory = (history, activeTab) => {
     });
 };
 
-// ✅ Group history by year and month for "All" tab
+// ✅ Group history by year and month for "All" tab (Corrected CST Handling)
 export const groupHistoryByYearAndMonth = (history) => {
     const grouped = {};
 
     history.forEach((entry) => {
-        const entryDate = toCentralDate(entry.date);
-        const year = entryDate.split("-")[0]; // Extract YYYY
-        const month = new Date(entryDate).toLocaleString("en-US", { month: "long" });
+        const entryDate = new Date(entry.date); // Keep in UTC
+        const year = entryDate.getUTCFullYear(); // Use UTC year
+        const month = entryDate.toLocaleString("en-US", { month: "long", timeZone: "UTC" }); // Force month from UTC
 
         if (!grouped[year]) grouped[year] = {};
         if (!grouped[year][month]) grouped[year][month] = [];
@@ -67,6 +67,9 @@ export const groupHistoryByYearAndMonth = (history) => {
 
     return grouped;
 };
+
+
+
 
 // ✅ Fix Badges Not Showing for Today & This Week
 export const getBadgesForDate = (date, badges) => {
