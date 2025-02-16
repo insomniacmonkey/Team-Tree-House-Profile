@@ -83,7 +83,7 @@ const fetchDataAndTrackPoints = async () => {
     }
 };
 
-setInterval(fetchDataAndTrackPoints, 21600000); // Runs every 6 hours
+setInterval(fetchDataAndTrackPoints, 3600000); // Runs every hour (3600000 ms)
 
 
 // **Start Server**

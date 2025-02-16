@@ -80,13 +80,27 @@ const PointsDashboard = () => {
                                                             <li key={index} className="border-b py-2">
                                                                 <strong>{entry.date}:</strong> {entry.totalGained} points
                                                                 <div className="mt-2">
+                                                                    <h3 className="text-md font-semibold">📊 Points Breakdown:</h3>
+                                                                    {entry.pointsBreakdown && Object.keys(entry.pointsBreakdown).length > 0 ? (
+                                                                        <ul className="list-disc ml-4">
+                                                                            {Object.entries(entry.pointsBreakdown).map(([category, points]) => (
+                                                                                <li key={category}>{category}: {points} points</li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    ) : (
+                                                                        <p className="text-gray-500">No detailed breakdown available.</p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="mt-2">
                                                                     <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
                                                                     {earnedBadges.length > 0 ? (
                                                                         <ul className="list-disc ml-4">
                                                                             {earnedBadges.map((badge) => (
-                                                                                <li key={badge.id} className="flex items-center space-x-2">
+                                                                                <li key={badge.id} className="flex items-center space-x-3">
                                                                                     <img src={badge.icon_url} alt={badge.name} className="w-6 h-6" />
-                                                                                    {badge.name}
+                                                                                    <a href={badge.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                                                                        {badge.name}
+                                                                                    </a>
                                                                                 </li>
                                                                             ))}
                                                                         </ul>
@@ -105,7 +119,7 @@ const PointsDashboard = () => {
                         ))}
                 </div>
             ) : (
-                // Other Tabs: Standard Points History with Badges
+                // ✅ Fixed: Show Points Breakdown in Other Tabs Too
                 <ul className="border rounded-md p-2 bg-gray-100">
                     {filteredHistory.length > 0 ? (
                         filteredHistory.map((entry, index) => {
@@ -114,13 +128,27 @@ const PointsDashboard = () => {
                                 <li key={index} className="border-b py-2">
                                     <strong>{entry.date}:</strong> {entry.totalGained} points
                                     <div className="mt-2">
+                                        <h3 className="text-md font-semibold">📊 Points Breakdown:</h3>
+                                        {entry.pointsBreakdown && Object.keys(entry.pointsBreakdown).length > 0 ? (
+                                            <ul className="list-disc ml-4">
+                                                {Object.entries(entry.pointsBreakdown).map(([category, points]) => (
+                                                    <li key={category}>{category}: {points} points</li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-gray-500">No detailed breakdown available.</p>
+                                        )}
+                                    </div>
+                                    <div className="mt-2">
                                         <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
                                         {earnedBadges.length > 0 ? (
                                             <ul className="list-disc ml-4">
                                                 {earnedBadges.map((badge) => (
-                                                    <li key={badge.id} className="flex items-center space-x-2">
+                                                    <li key={badge.id} className="flex items-center space-x-3">
                                                         <img src={badge.icon_url} alt={badge.name} className="w-6 h-6" />
-                                                        {badge.name}
+                                                        <a href={badge.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                                            {badge.name}
+                                                        </a>
                                                     </li>
                                                 ))}
                                             </ul>

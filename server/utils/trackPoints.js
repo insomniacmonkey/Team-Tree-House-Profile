@@ -44,17 +44,25 @@ function trackPoints(newData) {
 
     console.log(`🔹 Total Points Change Detected: ${totalPointsGained}`);
 
-    // Update history
-    const today = new Date().toISOString().split("T")[0];
-    let existingEntry = dbData.history.find((entry) => entry.date.startsWith(today));
+    // 🔹 Convert UTC to Central Time (CST/CDT)
+    const centralDate = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }).split(",")[0];
+
+    let existingEntry = dbData.history.find((entry) => entry.date.startsWith(centralDate));
 
     if (existingEntry) {
         existingEntry.totalGained += totalPointsGained;
+
+        // 🔹 Update each category in pointsBreakdown correctly
+        Object.keys(pointsGained).forEach((category) => {
+            existingEntry.pointsBreakdown[category] = 
+                (existingEntry.pointsBreakdown[category] || 0) + pointsGained[category];
+        });
+
     } else {
         dbData.history.push({
-            date: today,
+            date: centralDate,  
             totalGained: totalPointsGained,
-            pointsBreakdown: pointsGained
+            pointsBreakdown: Object.keys(pointsGained).length > 0 ? { ...pointsGained } : {} 
         });
     }
 
@@ -66,7 +74,6 @@ function trackPoints(newData) {
 
     // 🔹 Track New Badges
     console.log("🏅 Checking for new badges earned...");
-    console.log("🔍 Incoming Badges Data:", JSON.stringify(newData.badges, null, 2)); // Debugging log
 
     if (!dbData.badgesEarned) {
         dbData.badgesEarned = [];
@@ -83,7 +90,9 @@ function trackPoints(newData) {
                     name: badge.name,
                     url: badge.url || "",
                     icon_url: badge.icon_url || "",
-                    earned_date: badge.earned_date || today // 🔹 Use API-provided earned_date
+                    earned_date: badge.earned_date ? 
+                        new Date(badge.earned_date).toLocaleString("en-US", { timeZone: "America/Chicago" }).split(",")[0] 
+                        : centralDate  
                 });
             }
         });
