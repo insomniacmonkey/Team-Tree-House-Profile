@@ -108,7 +108,7 @@ const fetchDataAndTrackPoints = async () => {
         let logMessage = `✅ Points updated. Total: ${updatedData.lastRecorded.total}`;
 
         if (addedPoints) {
-            logMessage += ` | Gained: ${addedPoints.totalGained} (${Object.entries(addedPoints.pointsBreakdown).map(([k, v]) => `${k}: ${v}`).join(", ")})`;
+            logMessage += ` | Gained Today: ${addedPoints.totalGained} (${Object.entries(addedPoints.pointsBreakdown).map(([k, v]) => `${k}: ${v}`).join(", ")})`;
         }
         
         if (newBadges.length > 0) {
@@ -122,8 +122,8 @@ const fetchDataAndTrackPoints = async () => {
     }
 };
 
-//setInterval(fetchDataAndTrackPoints, 3600000); // Runs every hour (3600000 ms)
-setInterval(fetchDataAndTrackPoints, 60000); // Runs every minute (60000 ms)
+setInterval(fetchDataAndTrackPoints, 3600000); // Runs every hour (3600000 ms)
+//setInterval(fetchDataAndTrackPoints, 60000); // Runs every minute (60000 ms)
 
 // **Start Server**
 app.listen(PORT, () => {
