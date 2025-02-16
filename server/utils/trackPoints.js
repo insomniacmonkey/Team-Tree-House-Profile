@@ -83,7 +83,7 @@ function trackPoints(newData) {
                     name: badge.name,
                     url: badge.url || "",
                     icon_url: badge.icon_url || "",
-                    earned_date: today
+                    earned_date: badge.earned_date || today // 🔹 Use API-provided earned_date
                 });
             }
         });
