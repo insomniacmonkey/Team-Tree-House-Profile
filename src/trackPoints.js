@@ -11,7 +11,7 @@ if (!fs.existsSync('./data')) {
     fs.mkdirSync('./data');
 }
 
-// Step 2: Ensure `points.json` exists with default data before LowDB reads it
+// Ensure `points.json` exists with default data
 if (!fs.existsSync(dbFilePath)) {
     console.log("📄 'points.json' not found. Creating with default data...");
     fs.writeFileSync(dbFilePath, JSON.stringify({
@@ -23,15 +23,15 @@ if (!fs.existsSync(dbFilePath)) {
     console.log("✅ 'points.json' exists.");
 }
 
-// Set up LowDB (UNCHANGED)
+// Set up LowDB
 console.log("🔹 Initializing LowDB...");
 const adapter = new JSONFileSync(dbFilePath);
 const db = new LowSync(adapter, { defaultData: { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] } });
 
-// Read database **after assigning default data**
+// **FORCE RELOAD OF DATABASE FROM DISK**
 db.read();
+console.log("✅ Reloaded database before checking for new points.");
 
-// Ensure `db.data` is properly initialized
 if (!db.data || Object.keys(db.data).length === 0) {
     console.log("⚠️ Database is empty! Assigning default data...");
     db.data = { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] };
@@ -57,48 +57,49 @@ function trackPoints(data) {
 
     console.log("📊 Checking for new points earned...");
 
-    let pointsGained = {};
+    // **Check for Total Points Difference First**
     let totalPointsGained = newPoints.total - (lastRecorded.total || 0);
-    let newCategories = [];
+    console.log(`🔹 Total Points Change Detected: ${totalPointsGained} (New: ${newPoints.total}, Last: ${lastRecorded.total})`);
+
+    let pointsGained = {};
 
     Object.keys(newPoints).forEach((category) => {
         if (category !== 'total') {
-            const newPointsInCategory = newPoints[category];
+            const newPointsInCategory = newPoints[category] || 0;
             const lastPointsInCategory = lastRecorded.categories?.[category] || 0;
+            const pointDifference = newPointsInCategory - lastPointsInCategory;
 
-            if (newPointsInCategory > lastPointsInCategory) {
-                pointsGained[category] = newPointsInCategory - lastPointsInCategory;
+            console.log(`🔎 Checking ${category}: Last: ${lastPointsInCategory}, New: ${newPointsInCategory}, Difference: ${pointDifference}`);
+
+            if (pointDifference !== 0) {
+                pointsGained[category] = pointDifference;
             }
 
-            if (!(category in lastRecorded.categories)) {
-                console.log(`🆕 New category detected: "${category}" with ${newPointsInCategory} points.`);
-                newCategories.push({ category, points: newPointsInCategory });
-                db.data.lastRecorded.categories[category] = newPointsInCategory;
-            }
+            db.data.lastRecorded.categories[category] = newPointsInCategory;
         }
     });
 
-    if (newCategories.length > 0) {
-        db.write();
-    }
+    console.log(`🔹 Corrected Total Points Gained: ${totalPointsGained}`);
+    console.log("🔹 Points Gained by Category:", JSON.stringify(pointsGained, null, 2));
 
-    if (totalPointsGained > 0) {
-        console.log(`🎉 New total points earned: ${totalPointsGained}`);
-        console.log("📊 Breakdown of points gained:", pointsGained);
+    if (totalPointsGained !== 0) {
+        console.log(`🎉 New total points change detected: ${totalPointsGained}`);
+        console.log("📊 Breakdown of points changed:", pointsGained);
 
         const today = new Date().toISOString().split("T")[0];
-
         let existingEntry = db.data.history.find(entry => entry.date.startsWith(today));
 
         if (existingEntry) {
             console.log(`🔄 Merging points with existing entry for ${today}`);
-            existingEntry.totalGained += totalPointsGained;
 
             Object.keys(pointsGained).forEach(category => {
                 existingEntry.pointsBreakdown[category] = 
                     (existingEntry.pointsBreakdown[category] || 0) + pointsGained[category];
             });
+
+            existingEntry.totalGained = Object.values(existingEntry.pointsBreakdown).reduce((sum, val) => sum + val, 0);
         } else {
+            console.log(`📌 Creating new history entry for ${today}`);
             db.data.history.push({
                 date: new Date().toISOString(),
                 totalGained: totalPointsGained,
@@ -106,11 +107,13 @@ function trackPoints(data) {
             });
         }
 
+        // **Update lastRecorded.total correctly**
         db.data.lastRecorded.total = newPoints.total;
+
         db.write();
         console.log("✅ Database updated with new points.");
     } else {
-        console.log('ℹ️ No new points earned today.');
+        console.log('ℹ️ No new points earned or lost today.');
     }
 
     console.log("🔍 Checking for new badges earned...");
