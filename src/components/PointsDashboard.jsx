@@ -79,9 +79,9 @@ const PointsDashboard = () => {
                                                         return (
                                                             <li key={index} className="border-b py-2">
                                                                 <strong>{entry.date}:</strong> {entry.totalGained} points
-                                                                {earnedBadges.length > 0 && (
-                                                                    <div className="mt-2">
-                                                                        <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
+                                                                <div className="mt-2">
+                                                                    <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
+                                                                    {earnedBadges.length > 0 ? (
                                                                         <ul className="list-disc ml-4">
                                                                             {earnedBadges.map((badge) => (
                                                                                 <li key={badge.id} className="flex items-center space-x-2">
@@ -90,8 +90,10 @@ const PointsDashboard = () => {
                                                                                 </li>
                                                                             ))}
                                                                         </ul>
-                                                                    </div>
-                                                                )}
+                                                                    ) : (
+                                                                        <p className="text-gray-500">No badges earned on this day.</p>
+                                                                    )}
+                                                                </div>
                                                             </li>
                                                         );
                                                     })}
@@ -111,9 +113,9 @@ const PointsDashboard = () => {
                             return (
                                 <li key={index} className="border-b py-2">
                                     <strong>{entry.date}:</strong> {entry.totalGained} points
-                                    {earnedBadges.length > 0 && (
-                                        <div className="mt-2">
-                                            <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
+                                    <div className="mt-2">
+                                        <h3 className="text-md font-semibold">🏅 Badges Earned:</h3>
+                                        {earnedBadges.length > 0 ? (
                                             <ul className="list-disc ml-4">
                                                 {earnedBadges.map((badge) => (
                                                     <li key={badge.id} className="flex items-center space-x-2">
@@ -122,8 +124,10 @@ const PointsDashboard = () => {
                                                     </li>
                                                 ))}
                                             </ul>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <p className="text-gray-500">No badges earned on this day.</p>
+                                        )}
+                                    </div>
                                 </li>
                             );
                         })

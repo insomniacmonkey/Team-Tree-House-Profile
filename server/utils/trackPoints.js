@@ -64,9 +64,34 @@ function trackPoints(newData) {
         categories: newData.points
     };
 
+    // 🔹 Track New Badges
+    console.log("🏅 Checking for new badges earned...");
+    console.log("🔍 Incoming Badges Data:", JSON.stringify(newData.badges, null, 2)); // Debugging log
+
+    if (!dbData.badgesEarned) {
+        dbData.badgesEarned = [];
+    }
+
+    if (!newData.badges || newData.badges.length === 0) {
+        console.log("⚠️ No new badges found in incoming data.");
+    } else {
+        newData.badges.forEach((badge) => {
+            if (!dbData.badgesEarned.some((existingBadge) => existingBadge.id === badge.id)) {
+                console.log(`🏆 New badge earned: ${badge.name}`);
+                dbData.badgesEarned.push({
+                    id: badge.id,
+                    name: badge.name,
+                    url: badge.url || "",
+                    icon_url: badge.icon_url || "",
+                    earned_date: today
+                });
+            }
+        });
+    }
+
     // Write updated data to points.json
     fs.writeFileSync(dbFilePath, JSON.stringify(dbData, null, 2));
-    console.log("✅ Database updated with new points.");
+    console.log("✅ Database updated with new points and badges.");
 
     return dbData;
 }
