@@ -1,47 +1,44 @@
 const { LowSync } = require('lowdb');
-const { JSONFileSync } = require('lowdb/node'); // Correct import
+const { JSONFileSync } = require('lowdb/node');
 const fs = require('fs');
 
 const dbFilePath = './data/points.json';
-
 console.log("🔹 Starting trackPoints.js...");
 
-// Step 1: Ensure the `data/` directory exists
+// Ensure `data/` directory exists
 if (!fs.existsSync('./data')) {
     console.log("📁 'data/' directory not found. Creating now...");
     fs.mkdirSync('./data');
-} else {
-    console.log("✅ 'data/' directory exists.");
 }
 
-// Step 2: Ensure the `points.json` file exists with default data
+// Ensure `points.json` exists with default data
 if (!fs.existsSync(dbFilePath)) {
     console.log("📄 'points.json' not found. Creating with default data...");
-    fs.writeFileSync(dbFilePath, JSON.stringify({ lastRecorded: 0, history: [] }, null, 2));
+    fs.writeFileSync(dbFilePath, JSON.stringify({
+        lastRecorded: { total: 0, categories: {} },
+        history: [],
+        badgesEarned: []
+    }, null, 2));
 } else {
     console.log("✅ 'points.json' exists.");
 }
 
-// Step 3: Set up LowDB adapter
+// Set up LowDB
 console.log("🔹 Initializing LowDB...");
 const adapter = new JSONFileSync(dbFilePath);
-const db = new LowSync(adapter, { defaultData: { lastRecorded: 0, history: [] } });
+const db = new LowSync(adapter, { defaultData: { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] } });
 
-// Step 4: Read database
-console.log("📖 Reading database...");
+// **FORCE RELOAD OF DATABASE FROM DISK**
 db.read();
+console.log("✅ Reloaded database before checking for new points.");
 
-// Step 5: Debug: Log current database contents
-console.log("🔍 Current database state before checking defaults:", db.data);
-
-// Step 6: Ensure `db.data` is assigned correctly
-if (!db.data || typeof db.data !== 'object' || Object.keys(db.data).length === 0) {
-    console.log("⚠️ Database data is missing or empty! Initializing default structure...");
-    db.data = { lastRecorded: 0, history: [] };
+if (!db.data || Object.keys(db.data).length === 0) {
+    console.log("⚠️ Database is empty! Assigning default data...");
+    db.data = { lastRecorded: { total: 0, categories: {} }, history: [], badgesEarned: [] };
     db.write();
-    console.log("✅ Database initialized with default data.");
+    console.log("✅ Database initialized with default values.");
 } else {
-    console.log("✅ Database already initialized.");
+    console.log("✅ Database loaded successfully.");
 }
 
 console.log("🚀 trackPoints.js setup complete.");
@@ -49,24 +46,98 @@ console.log("🚀 trackPoints.js setup complete.");
 function trackPoints(data) {
     console.log("🔹 Running trackPoints function...");
 
-    if (!data || !data.points || typeof data.points.total !== 'number') {
+    if (!data || !data.points || !data.badges) {
         console.log("❌ Invalid data received. Skipping tracking.");
         return;
     }
 
-    const { points } = data;
+    const newPoints = data.points;
+    const newBadges = data.badges;
     const lastRecorded = db.data.lastRecorded;
 
-    console.log(`📊 Current total points: ${points.total}, Last recorded: ${lastRecorded}`);
+    console.log("📊 Checking for new points earned...");
 
-    if (points.total > lastRecorded) {
-        console.log(`🎉 New points earned: ${points.total - lastRecorded}`);
-        db.data.history.push({ date: new Date().toISOString(), points: points.total });
-        db.data.lastRecorded = points.total;
+    // **Check for Total Points Difference First**
+    let totalPointsGained = newPoints.total - (lastRecorded.total || 0);
+    console.log(`🔹 Total Points Change Detected: ${totalPointsGained} (New: ${newPoints.total}, Last: ${lastRecorded.total})`);
+
+    let pointsGained = {};
+
+    Object.keys(newPoints).forEach((category) => {
+        if (category !== 'total') {
+            const newPointsInCategory = newPoints[category] || 0;
+            const lastPointsInCategory = lastRecorded.categories?.[category] || 0;
+            const pointDifference = newPointsInCategory - lastPointsInCategory;
+
+            console.log(`🔎 Checking ${category}: Last: ${lastPointsInCategory}, New: ${newPointsInCategory}, Difference: ${pointDifference}`);
+
+            if (pointDifference !== 0) {
+                pointsGained[category] = pointDifference;
+            }
+
+            db.data.lastRecorded.categories[category] = newPointsInCategory;
+        }
+    });
+
+    console.log(`🔹 Corrected Total Points Gained: ${totalPointsGained}`);
+    console.log("🔹 Points Gained by Category:", JSON.stringify(pointsGained, null, 2));
+
+    if (totalPointsGained !== 0) {
+        console.log(`🎉 New total points change detected: ${totalPointsGained}`);
+        console.log("📊 Breakdown of points changed:", pointsGained);
+
+        const today = new Date().toISOString().split("T")[0];
+        let existingEntry = db.data.history.find(entry => entry.date.startsWith(today));
+
+        if (existingEntry) {
+            console.log(`🔄 Merging points with existing entry for ${today}`);
+
+            Object.keys(pointsGained).forEach(category => {
+                existingEntry.pointsBreakdown[category] = 
+                    (existingEntry.pointsBreakdown[category] || 0) + pointsGained[category];
+            });
+
+            existingEntry.totalGained = Object.values(existingEntry.pointsBreakdown).reduce((sum, val) => sum + val, 0);
+        } else {
+            console.log(`📌 Creating new history entry for ${today}`);
+            db.data.history.push({
+                date: new Date().toISOString(),
+                totalGained: totalPointsGained,
+                pointsBreakdown: pointsGained
+            });
+        }
+
+        // **Update lastRecorded.total correctly**
+        db.data.lastRecorded.total = newPoints.total;
+
         db.write();
         console.log("✅ Database updated with new points.");
     } else {
-        console.log('ℹ️ No new points earned today.');
+        console.log('ℹ️ No new points earned or lost today.');
+    }
+
+    console.log("🔍 Checking for new badges earned...");
+    let newBadgesEarned = [];
+
+    newBadges.forEach((badge) => {
+        if (!db.data.badgesEarned.some(b => b.id === badge.id)) {
+            console.log(`🏅 New badge earned: ${badge.name}`);
+            newBadgesEarned.push({
+                id: badge.id,
+                name: badge.name,
+                url: badge.url,
+                icon_url: badge.icon_url,
+                earned_date: badge.earned_date
+            });
+        }
+    });
+
+    if (newBadgesEarned.length > 0) {
+        db.data.badgesEarned.push(...newBadgesEarned);
+        db.write();
+        console.log("✅ New badges added to the database.");
+    } else {
+        console.log("ℹ️ No new badges earned today.");
     }
 }
 
