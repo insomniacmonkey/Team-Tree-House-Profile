@@ -1,10 +1,13 @@
-const fetchData = require('./fetchData');
-const trackPoints = require('./trackPoints');
+import React from "react";
+import ReactDOM from "react-dom/client"; // Use `react-dom/client` for React 18
+import App from "./App";
+import "./index.css";
 
-// Run once on startup
-(async () => {
-  const jsonData = await fetchData();
-  if (jsonData) {
-    trackPoints(jsonData);
-  }
-})();
+// Create a root for rendering React 18 correctly
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+root.render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
+);
