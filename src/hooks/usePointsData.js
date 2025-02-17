@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 
-const usePointsData = () => {
+const usePointsData = (username) => {
     const [points, setPoints] = useState(null);
     const [badges, setBadges] = useState([]);
     const [error, setError] = useState(false);
 
     const fetchPoints = async () => {
         try {
-            const response = await fetch("/data/points.json");
+            const response = await fetch(`/data/${username}.json`);
             if (!response.ok) throw new Error("Failed to load points data");
 
             const data = await response.json();
@@ -15,14 +15,16 @@ const usePointsData = () => {
             setBadges(data.badgesEarned || []);
             setError(false);
         } catch (err) {
-            console.error("❌ Error fetching points:", err);
+            console.error(`❌ Error fetching points for ${username}:`, err);
             setError(true);
         }
     };
 
     useEffect(() => {
-        fetchPoints();
-    }, []);
+        if (username) {
+            fetchPoints();
+        }
+    }, [username]); // Re-fetch data when username changes
 
     return { points, badges, error };
 };
