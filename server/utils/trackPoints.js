@@ -48,40 +48,47 @@ function trackPoints(username, newData) {
 
     let pointsGained = {};
 
+    // ✅ FIX: Only include categories where points were actually gained
     Object.keys(newData.points || {}).forEach(category => {
         if (category !== 'total') {
             const newPointsInCategory = newData.points[category] || 0;
             const lastPointsInCategory = lastRecorded.categories?.[category] || 0;
             const pointDifference = newPointsInCategory - lastPointsInCategory;
 
-            if (pointDifference !== 0) {
-                pointsGained[category] = pointDifference;
+            if (pointDifference > 0) {
+                pointsGained[category] = pointDifference; // ✅ Only store categories where points increased
             }
         }
     });
 
     console.log(`🔹 Total Points Change Detected for ${username}: ${totalPointsGained}`);
 
-    // Update history
+    // Update history if there are actually points gained
     const today = new Date().toISOString().split("T")[0];
-    let existingEntry = userData.history.find(entry => entry.date.startsWith(today));
 
-    if (existingEntry) {
-        existingEntry.totalGained += totalPointsGained;
-    } else {
-        userData.history.push({
-            date: today,
-            totalGained: totalPointsGained,
-            pointsBreakdown: pointsGained
-        });
+    if (totalPointsGained > 0) {
+        let existingEntry = userData.history.find(entry => entry.date.startsWith(today));
+
+        if (existingEntry) {
+            existingEntry.totalGained += totalPointsGained;
+            Object.keys(pointsGained).forEach(category => {
+                existingEntry.pointsBreakdown[category] = 
+                    (existingEntry.pointsBreakdown[category] || 0) + pointsGained[category];
+            });
+        } else {
+            userData.history.push({
+                date: today,
+                totalGained: totalPointsGained,
+                pointsBreakdown: pointsGained
+            });
+        }
     }
 
     // Ensure `lastRecorded.categories` exists and updates properly
     userData.lastRecorded = {
         total: newTotalPoints,
         categories: {
-            ...lastRecorded.categories,  // Preserve previous data
-            ...newData.points            // Merge with new data
+            ...newData.points  // Overwrite with latest API data
         }
     };
 
@@ -90,6 +97,7 @@ function trackPoints(username, newData) {
         userData.badgesEarned = [];
     }
 
+    // ✅ FIX: Remove unnecessary badge date assignment
     newData.badges.forEach(badge => {
         if (!userData.badgesEarned.some(existingBadge => existingBadge.id === badge.id)) {
             console.log(`🏆 New badge earned for ${username}: ${badge.name}`);
@@ -98,7 +106,7 @@ function trackPoints(username, newData) {
                 name: badge.name,
                 url: badge.url,
                 icon_url: badge.icon_url,
-                earned_date: today
+                earned_date: badge.earned_date
             });
         }
     });

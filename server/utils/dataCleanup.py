@@ -3,7 +3,7 @@ import math
 from collections import defaultdict
 
 # Load the latest uploaded points.json file
-file_path = "points.json"
+file_path = "brandonmartin5.json"
 
 with open(file_path, "r") as file:
     data = json.load(file)
