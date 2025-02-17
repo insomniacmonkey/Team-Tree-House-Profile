@@ -5,14 +5,31 @@ import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils"
 const TABS = ["Today", "This Week", "This Month", "This Year", "All"];
 
 const PointsDashboard = () => {
-    const { points, badges, error } = usePointsData();
+    const DROPDOWN_OPTIONS = ["chansestrode", "brandonmartin5", "kellydollins"];
+    const [selectedOption, setSelectedOption] = useState(DROPDOWN_OPTIONS[0]);
+    const { points, badges, error } = usePointsData(selectedOption);
     const [activeTab, setActiveTab] = useState("Today");
     const [expandedMonths, setExpandedMonths] = useState({});
+  
+
 
     if (error) {
         return (
             <div className="p-4">
-                <h1 className="text-2xl font-bold">Points Dashboard</h1>
+                <h1 className="text-2xl font-bold\">Points Dashboard</h1>
+            <select
+                className="border px-3 py-1 rounded-md bg-white shadow-sm\"
+                value={selectedOption}
+                onChange={(e) => setSelectedOption(e.target.value)}
+            >
+                {DROPDOWN_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                        {option}
+                    </option>
+                ))}
+            </select>
+                
+
                 <p className="text-red-500">❌ Error: Could not fetch points. Check if `public/data/points.json` exists.</p>
             </div>
         );
@@ -20,7 +37,7 @@ const PointsDashboard = () => {
 
     if (!points) return <p>Loading...</p>;
 
-    const filteredHistory = filterHistory(points.history, activeTab);
+    const filteredHistory = filterHistory(points?.history || [], activeTab);
     const historyByYearAndMonth = groupHistoryByYearAndMonth(points.history);
 
     // Toggle expansion for "All" tab
@@ -39,6 +56,17 @@ const PointsDashboard = () => {
     return (
         <div className="p-4 space-y-4">
             <h1 className="text-2xl font-bold">Points Dashboard</h1>
+          <select
+                    className="border px-3 py-1 rounded-md bg-white shadow-sm"
+                    value={selectedOption}
+                    onChange={(e) => setSelectedOption(e.target.value)}
+                >
+                    {DROPDOWN_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
             <p className="text-xl">Total Points: {points.lastRecorded?.total || 0}</p>
 
             {/* Tabs Navigation */}
