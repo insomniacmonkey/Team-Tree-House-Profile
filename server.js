@@ -13,119 +13,97 @@ app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 
 // Paths
-const pointsFilePath = path.join(__dirname, "public", "data", "points.json");
+const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
+const dataFolderPath = path.join(__dirname, "public", "data");
 const logFilePath = path.join(__dirname, "server", "log.txt");
 
-// Ensure `points.json` exists
-if (!fs.existsSync(pointsFilePath)) {
-    fs.writeFileSync(
-        pointsFilePath,
-        JSON.stringify({
-            lastRecorded: { total: 0, categories: {} },
-            history: [],
-            badgesEarned: []
-        }, null, 2)
-    );
+// Ensure `data` folder exists
+if (!fs.existsSync(dataFolderPath)) {
+    fs.mkdirSync(dataFolderPath, { recursive: true });
 }
 
-// **🔹 Ensure log.txt exists**
+// Ensure log.txt exists
 if (!fs.existsSync(logFilePath)) {
     fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
 }
 
-// **🔹 Append to log file**
+// Append to log file
 const appendLog = (message) => {
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
     const logMessage = `[${timestamp}] ${message}\n`;
     fs.appendFileSync(logFilePath, logMessage, "utf8");
 };
 
-// **🔹 Get points.json data**
-app.get("/api/points", (req, res) => {
+// Get points data for a specific profile
+app.get("/api/points/:username", (req, res) => {
+    const username = req.params.username;
+    const filePath = path.join(dataFolderPath, `${username}.json`);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: `No data found for ${username}` });
+    }
+
     try {
-        const data = fs.readFileSync(pointsFilePath, "utf8");
+        const data = fs.readFileSync(filePath, "utf8");
         res.json(JSON.parse(data));
     } catch (error) {
-        console.error("❌ Error reading points data:", error);
-        res.status(500).json({ message: "Error reading points data" });
+        console.error(`❌ Error reading data for ${username}:`, error);
+        res.status(500).json({ message: `Error reading data for ${username}` });
     }
 });
 
-// **🔹 API to update points by calling trackPoints()**
-app.post("/api/track", async (req, res) => {
-    try {
-        const newData = req.body;
-        const updatedData = trackPoints(newData);
+// Fetch data for all profiles
+const fetchDataForProfiles = async () => {
+    console.log("🔄 Fetching data for all profiles...");
 
-        // Save the updated data back to points.json
-        fs.writeFileSync(pointsFilePath, JSON.stringify(updatedData, null, 2));
+    for (const username of profiles) {
+        try {
+            if (typeof username !== "string") {
+                console.error(`❌ Invalid username detected: ${JSON.stringify(username)}`);
+                appendLog(`❌ Skipping invalid username: ${JSON.stringify(username)}`);
+                continue; // Skip this iteration
+            }
 
-        // Log the update
-        appendLog(`✅ Points updated via API. Total: ${updatedData.lastRecorded.total}`);
+            console.log(`🔄 Fetching data for ${username}...`);
+            const response = await axios.get(`https://teamtreehouse.com/profiles/${username}.json`);
+            const newData = response.data;
 
-        res.json({ message: "✅ Points updated successfully", data: updatedData });
-    } catch (error) {
-        console.error("❌ Error updating points data:", error);
-        res.status(500).json({ message: "Error updating points data" });
-    }
-});
+            if (!newData || typeof newData !== "object") {
+                console.error(`❌ Error: Invalid response format for ${username}`);
+                appendLog(`❌ Invalid API response for ${username}. Skipping update.`);
+                continue;
+            }
 
-// **🔹 Function to Fetch Data & Track Points**
-const fetchDataAndTrackPoints = async () => {
-    try {
-        console.log("🔄 Fetching data and tracking points...");
+            if (!newData.points || typeof newData.points.total !== "number") {
+                console.error(`❌ Error: Missing 'points' data for ${username}`);
+                appendLog(`❌ No valid points data for ${username}. Skipping update.`);
+                continue;
+            }
 
-        // Fetch latest profile data from API
-        const response = await axios.get("https://teamtreehouse.com/profiles/chansestrode.json");
-        const newData = response.data;
+            // ✅ Ensure username is passed as a string
+            const updatedData = trackPoints(username.toString(), {
+                points: newData.points,
+                badges: newData.badges || [],
+            });
 
-        if (!newData || !newData.points) {
-            console.log("⚠️ No new data from API, skipping...");
-            appendLog("⚠️ No new data fetched.");
-            return;
+            // ✅ Ensure correct file path format
+            const filePath = path.join(dataFolderPath, `${username}.json`);
+            fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2));
+
+            console.log(`✅ Points updated successfully for ${username}.`);
+            appendLog(`✅ Points updated for ${username}. Total: ${updatedData.lastRecorded.total}`);
+
+        } catch (error) {
+            console.error(`❌ Error fetching data for ${username}:`, error.message);
+            appendLog(`❌ Error fetching data for ${username}: ${error.message}`);
         }
-
-        // Call trackPoints function with new data
-        const updatedData = trackPoints({
-            points: newData.points,
-            badges: newData.badges || []
-        });
-
-        // Save updated data to points.json
-        fs.writeFileSync(pointsFilePath, JSON.stringify(updatedData, null, 2));
-
-        console.log("✅ Points updated successfully.");
-
-        // Log added points and badges
-        const addedPoints = updatedData.history.length > 0 
-            ? updatedData.history[updatedData.history.length - 1]
-            : null;
-
-        // ✅ FIX: Only log newly earned badges
-        const previouslyEarnedBadges = new Set(updatedData.badgesEarned.map(b => b.id));
-        const newBadges = (newData.badges || []).filter(badge => !previouslyEarnedBadges.has(badge.id));
-
-        let logMessage = `✅ Points updated. Total: ${updatedData.lastRecorded.total}`;
-
-        if (addedPoints) {
-            logMessage += ` | Gained Today: ${addedPoints.totalGained} (${Object.entries(addedPoints.pointsBreakdown).map(([k, v]) => `${k}: ${v}`).join(", ")})`;
-        }
-        
-        if (newBadges.length > 0) {
-            logMessage += ` | New Badges: ${newBadges.map(b => b.name).join(", ")}`;
-        }
-
-        appendLog(logMessage);
-    } catch (error) {
-        console.error("❌ Error fetching data:", error);
-        appendLog(`❌ Error fetching data: ${error.message}`);
     }
 };
 
-setInterval(fetchDataAndTrackPoints, 3600000); // Runs every hour (3600000 ms)
-//setInterval(fetchDataAndTrackPoints, 60000); // Runs every minute (60000 ms)
+// Fetch data every minute
+setInterval(fetchDataForProfiles, 60000);
 
-// **Start Server**
+// Start Server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
     appendLog("✅ Server started.");
