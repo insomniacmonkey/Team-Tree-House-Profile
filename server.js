@@ -15,7 +15,9 @@ app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
 const dataFolderPath = path.join(__dirname, "public", "data");
-const logFilePath = path.join(__dirname, "server", "log.txt");
+const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
+const logFilePath = path.join(__dirname, "server/logs", logFileName);
+
 
 // Ensure `data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
@@ -27,7 +29,7 @@ if (!fs.existsSync(logFilePath)) {
     fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
 }
 
-// Append to log file
+// Append to log file with correct timestamp
 const appendLog = (message) => {
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
     const logMessage = `[${timestamp}] ${message}\n`;
@@ -91,7 +93,35 @@ const fetchDataForProfiles = async () => {
             fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2));
 
             console.log(`✅ Points updated successfully for ${username}.`);
-            appendLog(`✅ Points updated for ${username}. Total: ${updatedData.lastRecorded.total}`);
+
+            let categoryLogs = `✅ Points updated for ${username}. Total: ${updatedData.lastRecorded.total}.`;
+
+            // ✅ Ensure categories exist before logging
+            if (updatedData.lastRecorded.categories && Object.keys(updatedData.lastRecorded.categories).length > 0) {
+                Object.entries(updatedData.lastRecorded.categories).forEach(([category, points]) => {
+                    categoryLogs += ` ${category}: ${points} points.`;
+                });
+            } else {
+                categoryLogs += ` No category points found.`;
+            }
+
+            // ✅ Log existing earned points for the day
+            const today = new Date().toISOString().split("T")[0];
+            const todayEntry = updatedData.history.find(entry => entry.date.startsWith(today));
+
+            if (todayEntry) {
+                categoryLogs += ` | Earned today: ${todayEntry.totalGained} points. Breakdown:`;
+                Object.entries(todayEntry.pointsBreakdown).forEach(([category, points]) => {
+                    categoryLogs += ` ${category}: ${points} points.`;
+                });
+            } else {
+                categoryLogs += ` | No points earned today yet.`;
+            }
+
+            // ✅ Always append log message
+            console.log(categoryLogs); // Debugging log
+            appendLog(categoryLogs);
+
 
         } catch (error) {
             console.error(`❌ Error fetching data for ${username}:`, error.message);

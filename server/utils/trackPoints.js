@@ -34,19 +34,26 @@ function trackPoints(username, newData) {
     const rawData = fs.readFileSync(userFilePath, 'utf8');
     let userData = JSON.parse(rawData);
 
-    if (!userData.lastRecorded) {
-        userData.lastRecorded = { total: 0, categories: {} };
-    }
-
     const lastRecorded = userData.lastRecorded;
+    const newTotalPoints = typeof newData.points?.total === "number" ? newData.points.total : lastRecorded.total || 0;
+    
+    let totalPointsGained = newTotalPoints - lastRecorded.total;
+    let pointsGained = {};
+
+    
+    // ✅ Ensure category points are tracked correctly
+    userData.lastRecorded = {
+        total: newTotalPoints,
+        categories: {
+            ...lastRecorded.categories, // Keep previous data
+            ...pointsGained // Only add newly earned points
+        }
+    };
+
 
     console.log(`📊 Checking for new points earned for ${username}...`);
     console.log(`🔹 Previous Total: ${lastRecorded.total}, New Total: ${newData.points?.total}`);
 
-    const newTotalPoints = newData.points?.total ?? lastRecorded.total;
-    let totalPointsGained = newTotalPoints - lastRecorded.total;
-
-    let pointsGained = {};
 
     // ✅ FIX: Only include categories where points were actually gained
     Object.keys(newData.points || {}).forEach(category => {
@@ -64,10 +71,13 @@ function trackPoints(username, newData) {
     console.log(`🔹 Total Points Change Detected for ${username}: ${totalPointsGained}`);
 
     // Update history if there are actually points gained
-    const today = new Date().toISOString().split("T")[0];
-
+    const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    console.log(`🕒 Current CST Time: ${nowCST}`);
+    const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
+    console.log(`📅 Today in CST: ${todayCST}`);
+   
     if (totalPointsGained > 0) {
-        let existingEntry = userData.history.find(entry => entry.date.startsWith(today));
+        let existingEntry = userData.history.find(entry => entry.date.startsWith(todayCST));
 
         if (existingEntry) {
             existingEntry.totalGained += totalPointsGained;
@@ -77,7 +87,7 @@ function trackPoints(username, newData) {
             });
         } else {
             userData.history.push({
-                date: today,
+                date: todayCST,
                 totalGained: totalPointsGained,
                 pointsBreakdown: pointsGained
             });
