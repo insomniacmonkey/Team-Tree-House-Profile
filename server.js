@@ -1,3 +1,23 @@
+/**
+ * server.js
+ * 
+ * This file initializes and runs the Express.js server responsible for handling 
+ * user points data and logging system activities. It fetches user profiles, 
+ * tracks points, and stores updated records in JSON files.
+ * 
+ * Key functionalities:
+ * - Serves as the backend API to provide user points data (`/api/points/:username`).
+ * - Fetches data from the Team Treehouse API and updates user records.
+ * - Logs system activities into daily log files (`log_YYYY-MM-DD.txt`).
+ * - Runs on port `5000` and includes middleware for CORS and JSON handling.
+ * - Uses `trackPoints.js` to process and update user progress.
+ * - Periodically fetches data at configurable intervals.
+ * 
+ * This file is essential for keeping user data up-to-date and ensuring accurate
+ * progress tracking across the system.
+ */
+
+
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -131,11 +151,11 @@ const fetchDataForProfiles = async () => {
 };
 
 
-//setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
 //setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
 //setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
-setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
+//setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server
 app.listen(PORT, () => {

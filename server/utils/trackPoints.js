@@ -1,3 +1,22 @@
+/**
+ * trackPoints.js
+ * 
+ * This file is responsible for tracking and updating user points data based on the latest 
+ * fetched information from the API. It ensures that point changes are correctly recorded 
+ * and stored in user-specific JSON files.
+ * 
+ * Key functionalities:
+ * - Reads and writes user data to JSON files for persistent storage.
+ * - Calculates new points earned for each category and updates history.
+ * - Ensures date consistency by converting timestamps to Central Standard Time (CST/CDT).
+ * - Tracks badges earned and prevents duplicate badge entries.
+ * - Logs and outputs relevant information for debugging purposes.
+ * 
+ * This file is a critical part of the system, ensuring that user progress is correctly 
+ * maintained and displayed across different parts of the application.
+ */
+
+
 const fs = require('fs');
 const path = require('path');
 

@@ -1,3 +1,22 @@
+/**
+ * pointsUtils.js
+ * 
+ * This file contains utility functions for handling and processing user points history
+ * within the system. It ensures that all date-related operations are correctly 
+ * aligned with Central Standard Time (CST/CDT) and supports various filtering and 
+ * formatting functions to help display user progress accurately.
+ * 
+ * Key functionalities:
+ * - Converts timestamps to CST/CDT and formats them in `YYYY-MM-DD`.
+ * - Filters user history based on selected tabs (Today, This Week, This Month, This Year).
+ * - Groups historical point data by year and month for structured reporting.
+ * - Fixes badge visibility issues by ensuring earned dates are correctly formatted.
+ * 
+ * This file is used throughout the system to standardize date processing and ensure 
+ * that user activity data is displayed correctly on the front end.
+ */
+
+
 // ✅ Get the correct Sunday (start of week) in CST/CDT
 const getSundayOfWeek = (date) => {
     const cstDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }));

@@ -1,3 +1,23 @@
+/**
+ * PointsDashboard.jsx
+ * 
+ * This React component serves as the main dashboard for displaying user points,
+ * badges, and historical progress. It allows users to switch between different 
+ * time-based views (Today, This Week, This Month, This Year, All) and see their 
+ * earned points and badges dynamically.
+ * 
+ * Key functionalities:
+ * - Fetches user data using `usePointsData` and displays total points.
+ * - Allows users to switch between different time filters.
+ * - Displays historical points grouped by year and month.
+ * - Expands/collapses monthly breakdowns in the "All" tab.
+ * - Fetches and displays badges earned on specific dates.
+ * 
+ * This component ensures a clear and interactive way for users to track their 
+ * progress and achievements within the system.
+ */
+
+
 import React, { useState } from "react";
 import usePointsData from "../hooks/usePointsData";
 import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils";
