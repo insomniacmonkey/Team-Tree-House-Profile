@@ -35,7 +35,11 @@ app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
 const dataFolderPath = path.join(__dirname, "public", "data");
-const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
+const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+const logFileName = `log_${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}.txt`;
+
+console.log(`📝 Log File Name: ${logFileName}`); // Debugging log
+
 const logFilePath = path.join(__dirname, "server/logs", logFileName);
 
 
@@ -151,10 +155,10 @@ const fetchDataForProfiles = async () => {
 };
 
 
-setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+//setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
 //setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
-//setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
+setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
 //setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server
