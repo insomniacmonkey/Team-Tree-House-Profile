@@ -77,7 +77,7 @@ const PointsDashboard = () => {
             // Format YYYY-MM-DD in CST
             const badgeDate = `${badgeCST.getFullYear()}-${String(badgeCST.getMonth() + 1).padStart(2, "0")}-${String(badgeCST.getDate()).padStart(2, "0")}`;
     
-            console.log(`🎖 Badge: ${badge.name} | UTC: ${badge.earned_date} | CST: ${badgeDate} | Expected: ${date}`);
+            //console.log(`🎖 Badge: ${badge.name} | UTC: ${badge.earned_date} | CST: ${badgeDate} | Expected: ${date}`);
     
             return badgeDate === date;
         });
