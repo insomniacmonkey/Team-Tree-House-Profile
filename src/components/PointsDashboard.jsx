@@ -50,8 +50,9 @@ const PointsDashboard = () => {
 
     // Get badges earned on a given date
     const getBadgesForDate = (date) => {
-        return badges.filter((badge) => badge.earned_date.startsWith(date));
+        return badges.filter((badge) => badge.earned_date.startsWith(date)); 
     };
+    
 
     return (
         <div className="p-4 space-y-4">

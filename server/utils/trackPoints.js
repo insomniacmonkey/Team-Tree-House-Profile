@@ -61,10 +61,13 @@ function trackPoints(username, newData) {
         }
     });
 
-    console.log(`🔹 Total Points Change Detected for ${username}: ${totalPointsGained}`);
-
     // Update history if there are actually points gained
-    const today = new Date().toISOString().split("T")[0];
+    const today = (() => {
+        const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+        return `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
+    })();
+    console.log(` ${today}`);
+    
 
     if (totalPointsGained > 0) {
         let existingEntry = userData.history.find(entry => entry.date.startsWith(today));
