@@ -23,7 +23,9 @@ const toCentralDate = (date) => {
 // ✅ Filter history based on active tab
 export const filterHistory = (history, activeTab) => {
     const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-    const todayCST = toCentralDate(nowCST);
+    //console.log(`🕒 Current CST Time: ${nowCST}`);
+    const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
+    //console.log(`📅 Today in CST: ${todayCST}`);
     const startOfThisWeek = getSundayOfWeek(nowCST);
     const startOfThisMonth = getFirstOfMonth(nowCST);
 
