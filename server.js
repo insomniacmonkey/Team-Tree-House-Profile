@@ -100,8 +100,12 @@ const fetchDataForProfiles = async () => {
     }
 };
 
-// Fetch data every minute
-setInterval(fetchDataForProfiles, 60000);
+
+//setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+//setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
+//setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
+//setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
+setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server
 app.listen(PORT, () => {
