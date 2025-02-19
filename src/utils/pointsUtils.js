@@ -16,7 +16,6 @@
  * that user activity data is displayed correctly on the front end.
  */
 
-
 // ✅ Get the correct Sunday (start of week) in CST/CDT
 const getSundayOfWeek = (date) => {
     const cstDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -87,15 +86,4 @@ export const groupHistoryByYearAndMonth = (history) => {
     });
 
     return grouped;
-};
-
-
-
-
-// ✅ Fix Badges Not Showing for Today & This Week
-export const getBadgesForDate = (date, badges) => {
-    return badges.filter((badge) => {
-        const badgeDate = toCentralDate(badge.earned_date);
-        return badgeDate === date;
-    });
 };

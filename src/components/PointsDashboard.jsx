@@ -17,7 +17,6 @@
  * progress and achievements within the system.
  */
 
-
 import React, { useState } from "react";
 import usePointsData from "../hooks/usePointsData";
 import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils";
@@ -70,8 +69,20 @@ const PointsDashboard = () => {
 
     // Get badges earned on a given date
     const getBadgesForDate = (date) => {
-        return badges.filter((badge) => badge.earned_date.startsWith(date));
+        return badges.filter((badge) => {
+            // Convert badge timestamp to CST/CDT
+            const badgeUTC = new Date(badge.earned_date);
+            const badgeCST = new Date(badgeUTC.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    
+            // Format YYYY-MM-DD in CST
+            const badgeDate = `${badgeCST.getFullYear()}-${String(badgeCST.getMonth() + 1).padStart(2, "0")}-${String(badgeCST.getDate()).padStart(2, "0")}`;
+    
+            console.log(`🎖 Badge: ${badge.name} | UTC: ${badge.earned_date} | CST: ${badgeDate} | Expected: ${date}`);
+    
+            return badgeDate === date;
+        });
     };
+    
 
     return (
         <div className="p-4 space-y-4">
