@@ -35,28 +35,34 @@ app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
 const dataFolderPath = path.join(__dirname, "public", "data");
-const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-const logFileName = `log_${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}.txt`;
+const logsFolderPath = path.join(__dirname, "server/logs");
 
-console.log(`📝 Log File Name: ${logFileName}`); // Debugging log
-
-const logFilePath = path.join(__dirname, "server/logs", logFileName);
-
-
-// Ensure `data` folder exists
+// Ensure `data` and `logs` folders exist
 if (!fs.existsSync(dataFolderPath)) {
     fs.mkdirSync(dataFolderPath, { recursive: true });
 }
-
-// Ensure log.txt exists
-if (!fs.existsSync(logFilePath)) {
-    fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
+if (!fs.existsSync(logsFolderPath)) {
+    fs.mkdirSync(logsFolderPath, { recursive: true });
 }
+
+// Function to get the current CST log file path
+const getLogFilePath = () => {
+    const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    const logFileName = `log_${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}.txt`;
+    return path.join(logsFolderPath, logFileName);
+};
 
 // Append to log file with correct timestamp
 const appendLog = (message) => {
+    const logFilePath = getLogFilePath(); // Get current log file based on CST date
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
     const logMessage = `[${timestamp}] ${message}\n`;
+
+    // Ensure the log file for today exists
+    if (!fs.existsSync(logFilePath)) {
+        fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
+    }
+
     fs.appendFileSync(logFilePath, logMessage, "utf8");
 };
 
@@ -143,7 +149,7 @@ const fetchDataForProfiles = async () => {
             }
 
             // ✅ Always append log message
-            console.log(categoryLogs); // Debugging log
+            //console.log(categoryLogs); // Debugging log
             appendLog(categoryLogs);
 
 
@@ -157,8 +163,8 @@ const fetchDataForProfiles = async () => {
 
 //setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
-//setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
-setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
+setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
+//setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
 //setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server

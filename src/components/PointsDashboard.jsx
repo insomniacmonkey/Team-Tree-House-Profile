@@ -86,7 +86,7 @@ const PointsDashboard = () => {
 
     return (
         <div className="p-4 space-y-4">
-            <h1 className="text-2xl font-bold">Points Dashboard</h1>
+            <h1 className="text-2xl font-bold">Select User</h1>
           <select
                     className="border px-3 py-1 rounded-md bg-white shadow-sm"
                     value={selectedOption}
@@ -99,6 +99,17 @@ const PointsDashboard = () => {
                     ))}
                 </select>
             <p className="text-xl">Total Points: {points.lastRecorded?.total || 0}</p>
+            {/* User Profile Link */}
+            <p className="mt-2">
+                <a 
+                    href={`https://teamtreehouse.com/profiles/${selectedOption}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-500 hover:underline"
+                >
+                    View {selectedOption}'s Profile
+                </a>
+            </p>
 
             {/* Tabs Navigation */}
             <div className="flex space-x-2 border-b mb-4">
