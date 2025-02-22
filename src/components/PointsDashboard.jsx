@@ -1,3 +1,22 @@
+/**
+ * PointsDashboard.jsx
+ * 
+ * This React component serves as the main dashboard for displaying user points,
+ * badges, and historical progress. It allows users to switch between different 
+ * time-based views (Today, This Week, This Month, This Year, All) and see their 
+ * earned points and badges dynamically.
+ * 
+ * Key functionalities:
+ * - Fetches user data using `usePointsData` and displays total points.
+ * - Allows users to switch between different time filters.
+ * - Displays historical points grouped by year and month.
+ * - Expands/collapses monthly breakdowns in the "All" tab.
+ * - Fetches and displays badges earned on specific dates.
+ * 
+ * This component ensures a clear and interactive way for users to track their 
+ * progress and achievements within the system.
+ */
+
 import React, { useState } from "react";
 import usePointsData from "../hooks/usePointsData";
 import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils";
@@ -50,13 +69,26 @@ const PointsDashboard = () => {
 
     // Get badges earned on a given date
     const getBadgesForDate = (date) => {
-        return badges.filter((badge) => badge.earned_date.startsWith(date)); 
+
+        return badges.filter((badge) => {
+            // Convert badge timestamp to CST/CDT
+            const badgeUTC = new Date(badge.earned_date);
+            const badgeCST = new Date(badgeUTC.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    
+            // Format YYYY-MM-DD in CST
+            const badgeDate = `${badgeCST.getFullYear()}-${String(badgeCST.getMonth() + 1).padStart(2, "0")}-${String(badgeCST.getDate()).padStart(2, "0")}`;
+    
+            //console.log(`🎖 Badge: ${badge.name} | UTC: ${badge.earned_date} | CST: ${badgeDate} | Expected: ${date}`);
+    
+            return badgeDate === date;
+        });
+
     };
     
 
     return (
         <div className="p-4 space-y-4">
-            <h1 className="text-2xl font-bold">Points Dashboard</h1>
+            <h1 className="text-2xl font-bold">Select User</h1>
           <select
                     className="border px-3 py-1 rounded-md bg-white shadow-sm"
                     value={selectedOption}
@@ -69,6 +101,17 @@ const PointsDashboard = () => {
                     ))}
                 </select>
             <p className="text-xl">Total Points: {points.lastRecorded?.total || 0}</p>
+            {/* User Profile Link */}
+            <p className="mt-2">
+                <a 
+                    href={`https://teamtreehouse.com/profiles/${selectedOption}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-500 hover:underline"
+                >
+                    View {selectedOption}'s Profile
+                </a>
+            </p>
 
             {/* Tabs Navigation */}
             <div className="flex space-x-2 border-b mb-4">

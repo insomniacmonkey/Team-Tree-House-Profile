@@ -1,3 +1,21 @@
+/**
+ * pointsUtils.js
+ * 
+ * This file contains utility functions for handling and processing user points history
+ * within the system. It ensures that all date-related operations are correctly 
+ * aligned with Central Standard Time (CST/CDT) and supports various filtering and 
+ * formatting functions to help display user progress accurately.
+ * 
+ * Key functionalities:
+ * - Converts timestamps to CST/CDT and formats them in `YYYY-MM-DD`.
+ * - Filters user history based on selected tabs (Today, This Week, This Month, This Year).
+ * - Groups historical point data by year and month for structured reporting.
+ * - Fixes badge visibility issues by ensuring earned dates are correctly formatted.
+ * 
+ * This file is used throughout the system to standardize date processing and ensure 
+ * that user activity data is displayed correctly on the front end.
+ */
+
 // ✅ Get the correct Sunday (start of week) in CST/CDT
 const getSundayOfWeek = (date) => {
     const cstDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }));
@@ -31,14 +49,11 @@ const toCentralDate = (date) => {
 
 // ✅ Filter history based on active tab
 export const filterHistory = (history, activeTab) => {
-    // Get today's date in CST/CDT (Keeping JSON and UI consistent)
-    const nowUTC = new Date(); // Current time in UTC
-    const nowCST = new Date(nowUTC.toLocaleString("en-US", { timeZone: "America/Chicago" })); // Convert to CST/CDT
-    const todayCST = nowCST.getFullYear() + "-" + 
-                    String(nowCST.getMonth() + 1).padStart(2, "0") + "-" + 
-                    String(nowCST.getDate()).padStart(2, "0");
 
-    console.log(`✅ [filterHistory] Final Fixed Today CST: ${todayCST}`);
+    const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    //console.log(`🕒 Current CST Time: ${nowCST}`);
+    const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
+    //console.log(`📅 Today in CST: ${todayCST}`);
 
     const startOfThisWeek = getSundayOfWeek(nowCST);
     const startOfThisMonth = getFirstOfMonth(nowCST);
@@ -91,32 +106,6 @@ export const groupHistoryByYearAndMonth = (history) => {
     });
 
     return grouped;
+
 };
-
-export const getBadgesForDate = (date, badges) => {
-    console.log(`🔹 [getBadgesForDate] Filtering for Date: ${date}`);
-
-    return badges.filter((badge) => {
-        // Convert UTC earned_date to Date object
-        const badgeUTC = new Date(badge.earned_date);
-
-        // Convert UTC Date to CST Date using `toLocaleDateString`
-        const badgeDate = badgeUTC.toLocaleDateString("en-US", { timeZone: "America/Chicago" });
-
-        // Log details
-        console.log("-------------------------------------------------");
-        console.log(`🔍 Processing Badge: ${badge.name}`);
-        console.log(`🆔 Badge ID: ${badge.id}`);
-        console.log(`⏳ Original UTC Earned Date: ${badge.earned_date}`);
-        console.log(`🌎 Converted CST Date: ${badgeDate}`);
-        console.log(`🔄 Comparing Against Filter Date: ${date}`);
-        console.log(`✅ Match Found: ${badgeDate === date}`);
-        console.log("-------------------------------------------------");
-
-        return badgeDate === date; // Match against today's CST date
-    });
-};
-
-
-
 

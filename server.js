@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -15,7 +16,9 @@ app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
 const dataFolderPath = path.join(__dirname, "public", "data");
-const logFilePath = path.join(__dirname, "server", "log.txt");
+const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
+const logFilePath = path.join(__dirname, "server/logs", logFileName);
+
 
 // Ensure `data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
@@ -27,27 +30,12 @@ if (!fs.existsSync(logFilePath)) {
     fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
 }
 
-// Append to log file
+// Append to log file with correct timestamp
 const appendLog = (message) => {
-    const now = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
-    const [month, day, year] = now.split(",")[0].split("/"); // MM/DD/YYYY format
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`; // Convert to YYYY-MM-DD
-
-    const logFileName = `log_${dateStr}.txt`;
-    const logFilePath = path.join(__dirname, "server/logs", logFileName);
-
-    const logMessage = `[${now}] ${message}\n`;
-
-    // Ensure the server directory exists
-    const logDir = path.join(__dirname, "server");
-    if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-    }
-
+    const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
+    const logMessage = `[${timestamp}] ${message}\n`;
     fs.appendFileSync(logFilePath, logMessage, "utf8");
 };
-
-
 
 // Get points data for a specific profile
 app.get("/api/points/:username", (req, res) => {
@@ -69,6 +57,8 @@ app.get("/api/points/:username", (req, res) => {
 
 // Fetch data for all profiles
 const fetchDataForProfiles = async () => {
+    console.log("🔄 Fetching data for all profiles...");
+
     for (const username of profiles) {
         try {
             if (typeof username !== "string") {
@@ -93,58 +83,46 @@ const fetchDataForProfiles = async () => {
                 continue;
             }
 
+            // ✅ Ensure username is passed as a string
+            const updatedData = trackPoints(username.toString(), {
+                points: newData.points,
+                badges: newData.badges || [],
+            });
+
+            // ✅ Ensure correct file path format
             const filePath = path.join(dataFolderPath, `${username}.json`);
-            let existingData = {};
+            fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2));
 
-            // ✅ Read existing data if it exists
-            if (fs.existsSync(filePath)) {
-                try {
-                    existingData = JSON.parse(fs.readFileSync(filePath, "utf8"));
-                } catch (readError) {
-                    console.error(`❌ Error reading existing data for ${username}:`, readError);
-                    appendLog(`❌ Error reading existing data for ${username}. Resetting data.`);
-                }
+            console.log(`✅ Points updated successfully for ${username}.`);
+
+            let categoryLogs = `✅ Points updated for ${username}. Total: ${updatedData.lastRecorded.total}.`;
+
+            // ✅ Ensure categories exist before logging
+            if (updatedData.lastRecorded.categories && Object.keys(updatedData.lastRecorded.categories).length > 0) {
+                Object.entries(updatedData.lastRecorded.categories).forEach(([category, points]) => {
+                    categoryLogs += ` ${category}: ${points} points.`;
+                });
+            } else {
+                categoryLogs += ` No category points found.`;
             }
 
-            // Ensure the structure is correct
-            existingData.points = existingData.points || { total: 0, categories: {} };
-            existingData.badges = existingData.badges || [];
+            // ✅ Log existing earned points for the day
+            const today = new Date().toISOString().split("T")[0];
+            const todayEntry = updatedData.history.find(entry => entry.date.startsWith(today));
 
-            // ✅ Merge points data
-            const updatedPoints = { ...existingData.points.categories };
-
-            Object.keys(newData.points).forEach((category) => {
-                if (category !== "total") {
-                    updatedPoints[category] = (updatedPoints[category] || 0) + newData.points[category];
-                }
-            });
-
-            existingData.points = {
-                total: newData.points.total, // Update total points
-                categories: updatedPoints, // Update category-wise points
-            };
-
-            // ✅ Merge new badges (avoid duplicates)
-            const existingBadgeIds = new Set(existingData.badges.map(badge => badge.id));
-            const newBadges = newData.badges.filter(badge => !existingBadgeIds.has(badge.id));
-
-            if (newBadges.length > 0) {
-                existingData.badges.push(...newBadges);
+            if (todayEntry) {
+                categoryLogs += ` | Earned today: ${todayEntry.totalGained} points. Breakdown:`;
+                Object.entries(todayEntry.pointsBreakdown).forEach(([category, points]) => {
+                    categoryLogs += ` ${category}: ${points} points.`;
+                });
+            } else {
+                categoryLogs += ` | No points earned today yet.`;
             }
 
-            // ✅ Write updated data back to file
-            fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
-
-            console.log(`✅ Points & Badges updated successfully for ${username}.`);
-            
-            // 📝 Append Log with Category Breakdown
-            let categoryLogs = `✅ Points updated for ${username}. Total: ${existingData.points.total}.`;
-            Object.entries(updatedPoints).forEach(([category, points]) => {
-                categoryLogs += ` ${category}: ${points} points.`;
-            });
-
+            // ✅ Always append log message
+            console.log(categoryLogs); // Debugging log
             appendLog(categoryLogs);
-            appendLog(`✅ New badges for ${username}: ${newBadges.length}`);
+
 
         } catch (error) {
             console.error(`❌ Error fetching data for ${username}:`, error.message);
@@ -154,12 +132,11 @@ const fetchDataForProfiles = async () => {
 };
 
 
-
-//setInterval(fetchDataForProfiles, 3600000); // Runs every hour (3600000 ms)
-
-setInterval(fetchDataForProfiles, 60000); // Fetch data every minute for testing
-
-//setInterval(fetchDataForProfiles, 300000); // fetch data every 5 minutes
+setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+//setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
+//setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
+//setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
+//setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server
 app.listen(PORT, () => {

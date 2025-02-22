@@ -1,3 +1,22 @@
+/**
+ * trackPoints.js
+ * 
+ * This file is responsible for tracking and updating user points data based on the latest 
+ * fetched information from the API. It ensures that point changes are correctly recorded 
+ * and stored in user-specific JSON files.
+ * 
+ * Key functionalities:
+ * - Reads and writes user data to JSON files for persistent storage.
+ * - Calculates new points earned for each category and updates history.
+ * - Ensures date consistency by converting timestamps to Central Standard Time (CST/CDT).
+ * - Tracks badges earned and prevents duplicate badge entries.
+ * - Logs and outputs relevant information for debugging purposes.
+ * 
+ * This file is a critical part of the system, ensuring that user progress is correctly 
+ * maintained and displayed across different parts of the application.
+ */
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -34,19 +53,26 @@ function trackPoints(username, newData) {
     const rawData = fs.readFileSync(userFilePath, 'utf8');
     let userData = JSON.parse(rawData);
 
-    if (!userData.lastRecorded) {
-        userData.lastRecorded = { total: 0, categories: {} };
-    }
-
     const lastRecorded = userData.lastRecorded;
+    const newTotalPoints = typeof newData.points?.total === "number" ? newData.points.total : lastRecorded.total || 0;
+    
+    let totalPointsGained = newTotalPoints - lastRecorded.total;
+    let pointsGained = {};
+
+    
+    // ✅ Ensure category points are tracked correctly
+    userData.lastRecorded = {
+        total: newTotalPoints,
+        categories: {
+            ...lastRecorded.categories, // Keep previous data
+            ...pointsGained // Only add newly earned points
+        }
+    };
+
 
     console.log(`📊 Checking for new points earned for ${username}...`);
     console.log(`🔹 Previous Total: ${lastRecorded.total}, New Total: ${newData.points?.total}`);
 
-    const newTotalPoints = newData.points?.total ?? lastRecorded.total;
-    let totalPointsGained = newTotalPoints - lastRecorded.total;
-
-    let pointsGained = {};
 
     // ✅ FIX: Only include categories where points were actually gained
     Object.keys(newData.points || {}).forEach(category => {
@@ -62,15 +88,15 @@ function trackPoints(username, newData) {
     });
 
     // Update history if there are actually points gained
-    const today = (() => {
-        const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-        return `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
-    })();
-    console.log(` ${today}`);
-    
+
+    const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    console.log(`🕒 Current CST Time: ${nowCST}`);
+    const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
+    console.log(`📅 Today in CST: ${todayCST}`);
+   
 
     if (totalPointsGained > 0) {
-        let existingEntry = userData.history.find(entry => entry.date.startsWith(today));
+        let existingEntry = userData.history.find(entry => entry.date.startsWith(todayCST));
 
         if (existingEntry) {
             existingEntry.totalGained += totalPointsGained;
@@ -80,7 +106,7 @@ function trackPoints(username, newData) {
             });
         } else {
             userData.history.push({
-                date: today,
+                date: todayCST,
                 totalGained: totalPointsGained,
                 pointsBreakdown: pointsGained
             });
