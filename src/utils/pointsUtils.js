@@ -22,47 +22,65 @@ const getSundayOfWeek = (date) => {
     const sunday = new Date(cstDate);
     sunday.setDate(sunday.getDate() - sunday.getDay());
     sunday.setHours(0, 0, 0, 0);
-    return toCentralDate(sunday); // Ensure YYYY-MM-DD format
+    const formattedSunday = toCentralDate(sunday);
+
+    console.log(`🔹 [getSundayOfWeek] Input Date: ${date}, CST Date: ${cstDate.toISOString()}, Computed Sunday: ${formattedSunday}`);
+    return formattedSunday; // Ensure YYYY-MM-DD format
 };
 
 // ✅ Get the first day of the month in CST/CDT
 const getFirstOfMonth = (date) => {
     const cstDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }));
-    return toCentralDate(new Date(cstDate.getFullYear(), cstDate.getMonth(), 1, 0, 0, 0, 0)); // Ensure YYYY-MM-DD format
+    const firstOfMonth = toCentralDate(new Date(cstDate.getFullYear(), cstDate.getMonth(), 1, 0, 0, 0, 0));
+
+    console.log(`🔹 [getFirstOfMonth] Input Date: ${date}, CST Date: ${cstDate.toISOString()}, First of Month: ${firstOfMonth}`);
+    return firstOfMonth; // Ensure YYYY-MM-DD format
 };
 
 // ✅ Convert date to `YYYY-MM-DD` in CST/CDT
 const toCentralDate = (date) => {
-    return new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }))
+    const convertedDate = new Date(new Date(date).toLocaleString("en-US", { timeZone: "America/Chicago" }))
         .toISOString()
         .split("T")[0]; // Format as YYYY-MM-DD
+
+    //console.log(`🔹 [toCentralDate] Input Date: ${date}, CST Formatted Date: ${convertedDate}`);
+    return convertedDate;
 };
 
 // ✅ Filter history based on active tab
 export const filterHistory = (history, activeTab) => {
+
     const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
     //console.log(`🕒 Current CST Time: ${nowCST}`);
     const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
     //console.log(`📅 Today in CST: ${todayCST}`);
+
     const startOfThisWeek = getSundayOfWeek(nowCST);
     const startOfThisMonth = getFirstOfMonth(nowCST);
+
+    console.log(`✅ [filterHistory] Now CST: ${nowCST.toISOString()}, Today CST: ${todayCST}`);
+    console.log(`✅ [filterHistory] Start of This Week: ${startOfThisWeek}, Start of This Month: ${startOfThisMonth}`);
 
     return history.filter((entry) => {
         const entryCST = toCentralDate(entry.date); // Convert to YYYY-MM-DD format
 
         if (activeTab === "Today") {
+            //console.log(`🔹 [filterHistory] Checking Today: Entry CST: ${entryCST}, Today CST: ${todayCST}`);
             return entryCST === todayCST;
         }
 
         if (activeTab === "This Week") {
+            //console.log(`🔹 [filterHistory] Checking This Week: Entry CST: ${entryCST}, Week Start: ${startOfThisWeek}, Today CST: ${todayCST}`);
             return entryCST >= startOfThisWeek && entryCST <= todayCST;
         }
 
         if (activeTab === "This Month") {
+            //console.log(`🔹 [filterHistory] Checking This Month: Entry CST: ${entryCST}, Month Start: ${startOfThisMonth}, Today CST: ${todayCST}`);
             return entryCST >= startOfThisMonth && entryCST <= todayCST;
         }
 
         if (activeTab === "This Year") {
+            //console.log(`🔹 [filterHistory] Checking This Year: Entry CST: ${entryCST}, Expected Year: ${todayCST.slice(0, 4)}`);
             return entryCST.startsWith(todayCST.slice(0, 4)); // Compare just the year
         }
 
@@ -83,7 +101,11 @@ export const groupHistoryByYearAndMonth = (history) => {
         if (!grouped[year][month]) grouped[year][month] = [];
 
         grouped[year][month].push(entry);
+
+        
     });
 
     return grouped;
+
 };
+

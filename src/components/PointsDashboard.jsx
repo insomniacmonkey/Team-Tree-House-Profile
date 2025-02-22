@@ -69,6 +69,7 @@ const PointsDashboard = () => {
 
     // Get badges earned on a given date
     const getBadgesForDate = (date) => {
+
         return badges.filter((badge) => {
             // Convert badge timestamp to CST/CDT
             const badgeUTC = new Date(badge.earned_date);
@@ -81,6 +82,7 @@ const PointsDashboard = () => {
     
             return badgeDate === date;
         });
+
     };
     
 
