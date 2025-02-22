@@ -1,22 +1,3 @@
-/**
- * server.js
- * 
- * This file initializes and runs the Express.js server responsible for handling 
- * user points data and logging system activities. It fetches user profiles, 
- * tracks points, and stores updated records in JSON files.
- * 
- * Key functionalities:
- * - Serves as the backend API to provide user points data (`/api/points/:username`).
- * - Fetches data from the Team Treehouse API and updates user records.
- * - Logs system activities into daily log files (`log_YYYY-MM-DD.txt`).
- * - Runs on port `5000` and includes middleware for CORS and JSON handling.
- * - Uses `trackPoints.js` to process and update user progress.
- * - Periodically fetches data at configurable intervals.
- * 
- * This file is essential for keeping user data up-to-date and ensuring accurate
- * progress tracking across the system.
- */
-
 
 const express = require("express");
 const cors = require("cors");
@@ -35,39 +16,26 @@ app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
 const dataFolderPath = path.join(__dirname, "public", "data");
-const logsFolderPath = path.join(__dirname, "server/logs");
+const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
+const logFilePath = path.join(__dirname, "server/logs", logFileName);
 
-// Ensure `data` and `logs` folders exist
+
+// Ensure `data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
     fs.mkdirSync(dataFolderPath, { recursive: true });
 }
-if (!fs.existsSync(logsFolderPath)) {
-    fs.mkdirSync(logsFolderPath, { recursive: true });
-}
 
-// Function to get the current CST log file path
-const getLogFilePath = () => {
-    const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
-    const logFileName = `log_${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}.txt`;
-    return path.join(logsFolderPath, logFileName);
-};
+// Ensure log.txt exists
+if (!fs.existsSync(logFilePath)) {
+    fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
+}
 
 // Append to log file with correct timestamp
 const appendLog = (message) => {
-
-    const logFilePath = getLogFilePath(); // Get current log file based on CST date
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
     const logMessage = `[${timestamp}] ${message}\n`;
-
-    // Ensure the log file for today exists
-    if (!fs.existsSync(logFilePath)) {
-        fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
-    }
-
     fs.appendFileSync(logFilePath, logMessage, "utf8");
 };
-
-
 
 // Get points data for a specific profile
 app.get("/api/points/:username", (req, res) => {
@@ -89,6 +57,8 @@ app.get("/api/points/:username", (req, res) => {
 
 // Fetch data for all profiles
 const fetchDataForProfiles = async () => {
+    console.log("🔄 Fetching data for all profiles...");
+
     for (const username of profiles) {
         try {
             if (typeof username !== "string") {
@@ -113,47 +83,15 @@ const fetchDataForProfiles = async () => {
                 continue;
             }
 
-            const filePath = path.join(dataFolderPath, `${username}.json`);
-            let existingData = {};
-
-            // ✅ Read existing data if it exists
-            if (fs.existsSync(filePath)) {
-                try {
-                    existingData = JSON.parse(fs.readFileSync(filePath, "utf8"));
-                } catch (readError) {
-                    console.error(`❌ Error reading existing data for ${username}:`, readError);
-                    appendLog(`❌ Error reading existing data for ${username}. Resetting data.`);
-                }
-            }
-
-            // Ensure the structure is correct
-            existingData.points = existingData.points || { total: 0, categories: {} };
-            existingData.badges = existingData.badges || [];
-
-            // ✅ Merge points data
-            const updatedPoints = { ...existingData.points.categories };
-
-            Object.keys(newData.points).forEach((category) => {
-                if (category !== "total") {
-                    updatedPoints[category] = (updatedPoints[category] || 0) + newData.points[category];
-                }
+            // ✅ Ensure username is passed as a string
+            const updatedData = trackPoints(username.toString(), {
+                points: newData.points,
+                badges: newData.badges || [],
             });
 
-            existingData.points = {
-                total: newData.points.total, // Update total points
-                categories: updatedPoints, // Update category-wise points
-            };
-
-            // ✅ Merge new badges (avoid duplicates)
-            const existingBadgeIds = new Set(existingData.badges.map(badge => badge.id));
-            const newBadges = newData.badges.filter(badge => !existingBadgeIds.has(badge.id));
-
-            if (newBadges.length > 0) {
-                existingData.badges.push(...newBadges);
-            }
-
-            // ✅ Write updated data back to file
-            fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
+            // ✅ Ensure correct file path format
+            const filePath = path.join(dataFolderPath, `${username}.json`);
+            fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2));
 
             console.log(`✅ Points updated successfully for ${username}.`);
 
@@ -182,8 +120,9 @@ const fetchDataForProfiles = async () => {
             }
 
             // ✅ Always append log message
-            //console.log(categoryLogs); // Debugging log
+            console.log(categoryLogs); // Debugging log
             appendLog(categoryLogs);
+
 
         } catch (error) {
             console.error(`❌ Error fetching data for ${username}:`, error.message);
@@ -193,13 +132,11 @@ const fetchDataForProfiles = async () => {
 };
 
 
-
-//setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
 //setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
 //setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
-setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
-
+//setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server
 app.listen(PORT, () => {
