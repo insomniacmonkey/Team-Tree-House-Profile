@@ -12,7 +12,14 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Serve static JSON files from public/data
-app.use("/data", express.static(path.join(__dirname, "public", "data")));
+app.use("/data", express.static(path.join(__dirname, "public", "data"), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".json")) {
+            res.setHeader("Content-Type", "application/json");
+        }
+    }
+}));
+
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
