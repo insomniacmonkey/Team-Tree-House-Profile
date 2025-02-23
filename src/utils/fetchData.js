@@ -17,12 +17,19 @@
 
 import axios from "axios";
 
+// Log window.location.origin to debug in the browser console
+console.log("🌎 Current Origin:", window.location.origin);
+
+const baseUrl = window.location.origin.includes("onrender.com") 
+    ? "https://team-tree-house-profile.onrender.com"  // Render backend URL
+    : "http://localhost:5000";  // Local development
+
 const fetchData = async (username) => {
     try {
-        const response = await axios.get(`http://localhost:5000/api/points/${username}`);
+        const response = await axios.get(`${baseUrl}/api/points/${username}`);
         return response.data;
     } catch (error) {
-        console.error(`Error fetching data for ${username}:`, error.message);
+        console.error(`❌ Error fetching data for ${username}:`, error.message);
         return null;
     }
 };
