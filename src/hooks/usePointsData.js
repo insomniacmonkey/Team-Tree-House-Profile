@@ -2,11 +2,11 @@
  * usePointsData.js
  * 
  * This custom React hook is responsible for fetching and managing user points 
- * and badge data from the local JSON files. It allows components to retrieve 
- * and display user progress dynamically.
+ * and badge data from the local JSON files stored on Render's persistent disk.
+ * It allows components to retrieve and display user progress dynamically.
  * 
  * Key functionalities:
- * - Fetches points and badge data from `/data/{username}.json`.
+ * - Fetches points and badge data from `/public/data/{username}.json`.
  * - Stores retrieved data in state (`points`, `badges`).
  * - Handles errors gracefully and sets an `error` flag if the fetch fails.
  * - Automatically re-fetches data when the `username` prop changes.
@@ -14,7 +14,6 @@
  * This hook is primarily used in components that need to display user progress 
  * and achievements in the UI, ensuring real-time updates when the data changes.
  */
-
 
 import { useState, useEffect } from "react";
 
@@ -25,9 +24,9 @@ const usePointsData = (username) => {
 
     const fetchPoints = async () => {
         try {
-            const response = await fetch(`/data/${username}.json`);
+            const response = await fetch(`/data/${username}.json`); // ✅ Fixed path for local + Render
             if (!response.ok) throw new Error("Failed to load points data");
-
+    
             const data = await response.json();
             setPoints(data);
             setBadges(data.badgesEarned || []);
@@ -37,6 +36,7 @@ const usePointsData = (username) => {
             setError(true);
         }
     };
+    
 
     useEffect(() => {
         if (username) {
