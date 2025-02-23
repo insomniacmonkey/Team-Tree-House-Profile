@@ -11,10 +11,10 @@ const PORT = process.env.PORT || 10000;
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = path.resolve("../../../../public/data"); 
+const dataFolderPath = path.resolve("/public/data"); 
 
 // ✅ Fix log file path to be inside `/public/data/logs`
-const logDir = "../../../../public/data/logs"; // ✅ Ensure logs are stored in the writable disk
+const logDir = "/public/data/logs"; // ✅ Ensure logs are stored in the writable disk
 const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
 const logFilePath = path.join(logDir, logFileName);
 
