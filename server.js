@@ -10,7 +10,7 @@ const PORT = 5000;
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = "/public/data"; // ✅ Absolute path to match Render's persistent disk
+const dataFolderPath = path.resolve("/public/data"); 
 
 // ✅ Fix log file path to be inside `/public/data/logs`
 const logDir = "/public/data/logs"; // ✅ Ensure logs are stored in the writable disk
@@ -20,7 +20,7 @@ const logFilePath = path.join(logDir, logFileName);
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
-// Serve static JSON files from public/data
+// Serve static JSON files from public/data BEFORE API routes
 app.use("/data", express.static(dataFolderPath, {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith(".json")) {
@@ -28,6 +28,25 @@ app.use("/data", express.static(dataFolderPath, {
         }
     }
 }));
+
+// AFTER serving static files, define API routes:
+app.get("/api/points/:username", (req, res) => {
+    const username = req.params.username;
+    const filePath = path.join(dataFolderPath, `${username}.json`);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: `No data found for ${username}` });
+    }
+
+    try {
+        const data = fs.readFileSync(filePath, "utf8");
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error(`❌ Error reading data for ${username}:`, error);
+        res.status(500).json({ message: `Error reading data for ${username}` });
+    }
+});
+
 
 // Ensure `public/data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
