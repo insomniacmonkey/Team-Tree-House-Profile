@@ -21,8 +21,8 @@ const usePointsData = (username) => {
     // Set the API base URL based on the environment.
     // In development, use http://localhost:5000.
     // In production, use http://localhost:10000.
-    const baseUrl = process.env.NODE_ENV === "development"
-        ? "http://localhost:10000"
+    const baseUrl = window.location.origin.includes("onrender.com") 
+        ? "https://team-tree-house-profile.onrender.com"
         : "http://localhost:10000";
 
     useEffect(() => {
