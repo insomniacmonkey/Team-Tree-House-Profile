@@ -170,6 +170,8 @@ const fetchDataForProfiles = async () => {
     }
 };
 
+// Run once immediately upon server start
+fetchDataForProfiles();
 //setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
 //setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes

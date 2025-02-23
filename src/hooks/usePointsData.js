@@ -1,14 +1,14 @@
 /**
  * usePointsData.js
  * 
- * This custom React hook fetches and manages user points and badge data from the backend API.
- * It retrieves data dynamically and ensures real-time updates when the user changes.
- * 
+ * This custom React hook fetches and manages user points and badge data from the static JSON files.
+ * It retrieves data dynamically and ensures real-time updates when the username changes.
+ *
  * Key functionalities:
  * - Fetches points and badge data from `/data/{username}.json`.
- * - Dynamically determines API URL based on deployment environment.
+ * - Uses the browser's relative URL (no need for a separate base URL).
  * - Handles errors gracefully and logs fetch failures.
- * - Uses an abort controller to prevent memory leaks on component unmount.
+ * - Uses an AbortController to prevent memory leaks on component unmount.
  */
 
 import { useState, useEffect } from "react";
@@ -18,13 +18,12 @@ const usePointsData = (username) => {
     const [badges, setBadges] = useState([]);
     const [error, setError] = useState(false);
 
-    // ✅ Dynamically determine backend API URL
-    const baseUrl = window.location.origin.includes("onrender.com") 
-        ? "https://team-tree-house-profile.onrender.com"
-        : "";
-
-    // ✅ Debugging log to confirm base URL
-    console.log("🌎 API Base URL:", baseUrl);
+    // Set the API base URL based on the environment.
+    // In development, use http://localhost:5000.
+    // In production, use http://localhost:10000.
+    const baseUrl = process.env.NODE_ENV === "development"
+        ? "http://localhost:5000"
+        : "http://localhost:10000";
 
     useEffect(() => {
         if (!username) return;
@@ -54,8 +53,8 @@ const usePointsData = (username) => {
 
         fetchPoints();
 
-        return () => controller.abort(); // ✅ Clean up fetch on unmount
-    }, [username]); // Re-fetch data when username changes
+        return () => controller.abort(); // Clean up fetch on component unmount
+    }, [username, baseUrl]);
 
     return { points, badges, error };
 };
