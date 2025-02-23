@@ -24,7 +24,11 @@ const usePointsData = (username) => {
 
     const fetchPoints = async () => {
         try {
-            const response = await fetch(`/data/${username}.json`); // ✅ Fixed path for local + Render
+            const baseUrl = process.env.NODE_ENV === "production" 
+                ? "https://team-tree-house-profile.onrender.com/" 
+                : ""; // Use relative path locally
+    
+            const response = await fetch(`${baseUrl}/data/${username}.json`);
             if (!response.ok) throw new Error("Failed to load points data");
     
             const data = await response.json();
@@ -36,6 +40,7 @@ const usePointsData = (username) => {
             setError(true);
         }
     };
+    
     
 
     useEffect(() => {
