@@ -6,7 +6,7 @@ const axios = require("axios");
 const trackPoints = require("./server/utils/trackPoints");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 
 // Paths
