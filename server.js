@@ -12,12 +12,11 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Serve static JSON files from public/data
-app.use("/data", express.static("public/data"));
-
+app.use("/data", express.static(path.join(__dirname, "public", "data")));
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = "/public/data"; // ✅ Updated to use Render's persistent disk
+const dataFolderPath = path.join(__dirname, "public", "data"); // ✅ Correct local + Render path
 const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
 const logFilePath = path.join(dataFolderPath, logFileName);
 
