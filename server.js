@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -12,20 +11,25 @@ const PORT = 5000;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
+// Serve static JSON files from public/data
+app.use("/data", express.static("public/data"));
+
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = path.join(__dirname, "public", "data");
+const dataFolderPath = "/public/data"; // ✅ Updated to use Render's persistent disk
 const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
-const logFilePath = path.join(__dirname, "server/logs", logFileName);
+const logFilePath = path.join(dataFolderPath, logFileName);
 
-
-// Ensure `data` folder exists
+// Ensure `public/data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
     fs.mkdirSync(dataFolderPath, { recursive: true });
+    console.log("✅ Created missing persistent data folder.");
+} else {
+    console.log("✅ Persistent data folder already exists.");
 }
 
-// Ensure log.txt exists
+// Ensure log file exists
 if (!fs.existsSync(logFilePath)) {
     fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
 }
@@ -123,14 +127,12 @@ const fetchDataForProfiles = async () => {
             console.log(categoryLogs); // Debugging log
             appendLog(categoryLogs);
 
-
         } catch (error) {
             console.error(`❌ Error fetching data for ${username}:`, error.message);
             appendLog(`❌ Error fetching data for ${username}: ${error.message}`);
         }
     }
 };
-
 
 setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes

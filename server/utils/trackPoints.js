@@ -16,16 +16,16 @@
  * maintained and displayed across different parts of the application.
  */
 
-
 const fs = require('fs');
 const path = require('path');
 
-// Base directory for user-specific points data
-const dataDirectory = path.join(__dirname, '../../public/data');
+// ✅ Updated to use Render's persistent disk
+const dataDirectory = "/public/data";
 
 // Ensure `data` directory exists
 if (!fs.existsSync(dataDirectory)) {
     fs.mkdirSync(dataDirectory, { recursive: true });
+    console.log("✅ Created missing persistent data folder.");
 }
 
 function trackPoints(username, newData) {
@@ -59,7 +59,6 @@ function trackPoints(username, newData) {
     let totalPointsGained = newTotalPoints - lastRecorded.total;
     let pointsGained = {};
 
-    
     // ✅ Ensure category points are tracked correctly
     userData.lastRecorded = {
         total: newTotalPoints,
@@ -69,10 +68,8 @@ function trackPoints(username, newData) {
         }
     };
 
-
     console.log(`📊 Checking for new points earned for ${username}...`);
     console.log(`🔹 Previous Total: ${lastRecorded.total}, New Total: ${newData.points?.total}`);
-
 
     // ✅ FIX: Only include categories where points were actually gained
     Object.keys(newData.points || {}).forEach(category => {
@@ -88,12 +85,10 @@ function trackPoints(username, newData) {
     });
 
     // Update history if there are actually points gained
-
     const nowCST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
     console.log(`🕒 Current CST Time: ${nowCST}`);
     const todayCST = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, "0")}-${String(nowCST.getDate()).padStart(2, "0")}`;
     console.log(`📅 Today in CST: ${todayCST}`);
-   
 
     if (totalPointsGained > 0) {
         let existingEntry = userData.history.find(entry => entry.date.startsWith(todayCST));
