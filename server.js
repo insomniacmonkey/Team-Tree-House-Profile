@@ -8,24 +8,26 @@ const trackPoints = require("./server/utils/trackPoints");
 const app = express();
 const PORT = 5000;
 
+// Paths
+const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
+const dataFolderPath = "/public/data"; // ✅ Absolute path to match Render's persistent disk
+
+// ✅ Fix log file path to be inside `/public/data/logs`
+const logDir = "/public/data/logs"; // ✅ Ensure logs are stored in the writable disk
+const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
+const logFilePath = path.join(logDir, logFileName);
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: "5mb" })); // Increase limit to 5MB
 // Serve static JSON files from public/data
-app.use("/data", express.static(path.join(__dirname, "public", "data"), {
+app.use("/data", express.static(dataFolderPath, {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith(".json")) {
             res.setHeader("Content-Type", "application/json");
         }
     }
 }));
-
-
-// Paths
-const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = path.join(__dirname, "public", "data"); // ✅ Correct local + Render path
-const logFileName = `log_${new Date().toISOString().split("T")[0]}.txt`; // Format: log_YYYY-MM-DD.txt
-const logFilePath = path.join(dataFolderPath, logFileName);
 
 // Ensure `public/data` folder exists
 if (!fs.existsSync(dataFolderPath)) {
@@ -35,10 +37,18 @@ if (!fs.existsSync(dataFolderPath)) {
     console.log("✅ Persistent data folder already exists.");
 }
 
-// Ensure log file exists
+// ✅ Ensure `/public/data/logs` folder exists before writing logs
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+    console.log("✅ Created missing logs folder in /public/data.");
+}
+
+// ✅ Ensure log file exists before writing
 if (!fs.existsSync(logFilePath)) {
     fs.writeFileSync(logFilePath, "=== Points Tracking Log ===\n", "utf8");
 }
+
+
 
 // Append to log file with correct timestamp
 const appendLog = (message) => {
@@ -140,10 +150,10 @@ const fetchDataForProfiles = async () => {
     }
 };
 
-//setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
+setInterval(fetchDataForProfiles, 60000); // Fetch data every minute
 //setInterval(fetchDataForProfiles, 300000); // Fetch every 5 minutes
 //setInterval(fetchDataForProfiles, 600000); // Fetch every 10 minutes
-setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
+//setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
 //setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
 // Start Server

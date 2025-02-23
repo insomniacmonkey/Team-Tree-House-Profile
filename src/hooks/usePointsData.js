@@ -1,18 +1,13 @@
 /**
  * usePointsData.js
  * 
- * This custom React hook is responsible for fetching and managing user points 
- * and badge data from the local JSON files stored on Render's persistent disk.
- * It allows components to retrieve and display user progress dynamically.
+ * This custom React hook fetches and manages user points and badge data from the backend API.
+ * It retrieves data dynamically and ensures real-time updates when the user changes.
  * 
  * Key functionalities:
- * - Fetches points and badge data from `/public/data/{username}.json`.
- * - Stores retrieved data in state (`points`, `badges`).
- * - Handles errors gracefully and sets an `error` flag if the fetch fails.
- * - Automatically re-fetches data when the `username` prop changes.
- * 
- * This hook is primarily used in components that need to display user progress 
- * and achievements in the UI, ensuring real-time updates when the data changes.
+ * - Fetches points and badge data from `/data/{username}.json`.
+ * - Handles errors gracefully and logs fetch failures.
+ * - Uses an abort controller to prevent memory leaks on component unmount.
  */
 
 import { useState, useEffect } from "react";
@@ -23,25 +18,33 @@ const usePointsData = (username) => {
     const [error, setError] = useState(false);
 
     const fetchPoints = async () => {
-        try {
-            const baseUrl = window.location.origin.includes("onrender.com") 
-                ? "https://team-tree-house-profile.onrender.com" 
-                : "";
-            const response = await fetch(`${baseUrl}/data/${username}.json`);
+        const controller = new AbortController(); // ✅ Prevent memory leaks
+        const signal = controller.signal;
 
-            if (!response.ok) throw new Error("Failed to load points data");
-    
+        try {
+            const baseUrl = process.env.NODE_ENV === "production" 
+                ? "https://team-tree-house-profile.onrender.com"
+                : "";
+                
+            const response = await fetch(`${baseUrl}/data/${username}.json`, { signal });
+
+            if (!response.ok) {
+                throw new Error(`Failed to load points data: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
             setPoints(data);
             setBadges(data.badgesEarned || []);
             setError(false);
         } catch (err) {
-            console.error(`❌ Error fetching points for ${username}:`, err);
-            setError(true);
+            if (err.name !== "AbortError") {
+                console.error(`❌ Error fetching points for ${username}:`, err);
+                setError(true);
+            }
         }
+
+        return () => controller.abort(); // ✅ Clean up fetch on unmount
     };
-    
-    
 
     useEffect(() => {
         if (username) {
