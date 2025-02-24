@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 10000;
 
 // Paths
 const profiles = ["brandonmartin5", "chansestrode", "kellydollins"];
-const dataFolderPath = path.join("/tmp", "public", "data");
+const dataFolderPath = '/opt/render/project/src/public/data';
 
 // ✅ Fix log file path to be inside `/public/data/logs`
 const logDir = path.join(dataFolderPath, "logs");
