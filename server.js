@@ -5,6 +5,8 @@ const path = require("path");
 const axios = require("axios");
 const trackPoints = require("./server/utils/trackPoints");
 
+const serverStartedAt = new Date();
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -183,6 +185,11 @@ setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
 // Add this code after your API endpoints, before starting the server.
 const buildPath = path.join(__dirname, "build");
 app.use(express.static(buildPath));
+
+// last-updated API endpoint
+app.get('/api/last-updated', (req, res) => {
+    res.json({ lastUpdated: serverStartedAt.toISOString() });
+});
 
 // Serve index.html for any unknown routes
 app.get("*", (req, res) => {
