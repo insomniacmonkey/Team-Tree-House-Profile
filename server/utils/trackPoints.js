@@ -20,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ✅ Updated to use Render's persistent disk
-const dataDirectory = path.resolve("/public/data");
+const dataDirectory = path.join(__dirname, "../public/data"); 
 
 // Ensure `data` directory exists
 if (!fs.existsSync(dataDirectory)) {
