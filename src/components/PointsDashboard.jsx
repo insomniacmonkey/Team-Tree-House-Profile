@@ -17,7 +17,7 @@
  * progress and achievements within the system.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import usePointsData from "../hooks/usePointsData";
 import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils";
 
@@ -29,8 +29,14 @@ const PointsDashboard = () => {
     const { points, badges, error } = usePointsData(selectedOption);
     const [activeTab, setActiveTab] = useState("Today");
     const [expandedMonths, setExpandedMonths] = useState({});
-  
+    const [lastUpdated, setLastUpdated] = useState(null);
 
+    useEffect(() => {
+        fetch('/api/last-updated')
+            .then((res) => res.json())
+            .then((data) => setLastUpdated(data.lastUpdated))
+            .catch((error) => console.error("Error fetching last updated time:", error));
+    }, []);
 
     if (error) {
         return (
@@ -87,7 +93,11 @@ const PointsDashboard = () => {
     
 
     return (
+        
+            
         <div className="p-4 space-y-4">
+            
+            <h2>Last Updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Loading..."}</h2>
             <h1 className="text-2xl font-bold">Select User</h1>
           <select
                     className="border px-3 py-1 rounded-md bg-white shadow-sm"
