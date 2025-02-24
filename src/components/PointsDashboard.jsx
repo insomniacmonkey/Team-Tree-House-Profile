@@ -49,7 +49,7 @@ const PointsDashboard = () => {
             </select>
                 
 
-                <p className="text-red-500">❌ Error: Could not fetch points. Check if `public/data/points.json` exists.</p>
+                <p className="text-red-500">❌ Error: Could not fetch points. Check if `public/data/filename.json` exists.</p>
             </div>
         );
     }
