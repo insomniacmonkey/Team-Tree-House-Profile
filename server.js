@@ -178,8 +178,20 @@ fetchDataForProfiles();
 setInterval(fetchDataForProfiles, 1800000); // Fetch every 30 minutes
 //setInterval(fetchDataForProfiles, 3600000); // Fetch every hour
 
+// ... [all your API routes and other middleware]
+
+// Add this code after your API endpoints, before starting the server.
+const buildPath = path.join(__dirname, "build");
+app.use(express.static(buildPath));
+
+// Serve index.html for any unknown routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(buildPath, "index.html"));
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
     appendLog("✅ Server started.");
 });
+
