@@ -38,6 +38,15 @@ const PointsDashboard = () => {
             .catch((error) => console.error("Error fetching last updated time:", error));
     }, [selectedOption]);
 
+    // Helper function to calculate points for a specific period
+    const calculatePeriodTotal = (period) => {
+        return filterHistory(points.history, period).reduce(
+        (sum, entry) => sum + entry.totalGained,
+        0
+        );
+    };
+  
+
     if (error) {
         return (
             <div className="p-4">
@@ -110,7 +119,11 @@ const PointsDashboard = () => {
                         </option>
                     ))}
                 </select>
-            <p className="text-xl">Total Points: {points.lastRecorded?.total || 0}</p>
+                <p className="text-xl">Total Points: {points.lastRecorded?.total || 0}</p>
+                <p className="text-xl">This Week: {calculatePeriodTotal("This Week")}</p>
+                <p className="text-xl">This Month: {calculatePeriodTotal("This Month")}</p>
+                <p className="text-xl">This Year: {calculatePeriodTotal("This Year")}</p>
+
             {/* User Profile Link */}
             <p className="mt-2">
                 <a 
