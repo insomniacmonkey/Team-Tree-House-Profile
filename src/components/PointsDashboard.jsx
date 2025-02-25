@@ -18,6 +18,11 @@
  *
  * Updated and modernized UI with a green color theme.
  */
+/**
+ * PointsDashboard.jsx
+ * 
+ * Dark mode green-themed dashboard for tracking points and badges.
+ */
 import React, { useState, useEffect } from "react";
 import usePointsData from "../hooks/usePointsData";
 import { filterHistory, groupHistoryByYearAndMonth } from "../utils/pointsUtils";
@@ -39,7 +44,7 @@ const PointsDashboard = () => {
             .catch((error) => console.error("Error fetching last updated time:", error));
     }, [selectedOption]);
 
-    // Helper function to calculate points for a specific period
+    // Calculate points for a given period
     const calculatePeriodTotal = (period) => {
         return filterHistory(points.history, period).reduce(
             (sum, entry) => sum + entry.totalGained,
@@ -49,10 +54,10 @@ const PointsDashboard = () => {
 
     if (error) {
         return (
-            <div className="p-6 bg-green-50 rounded-lg shadow-lg">
-                <h1 className="text-2xl font-bold text-green-700">Points Dashboard</h1>
+            <div className="p-6 bg-gray-900 text-green-300 rounded-lg shadow-lg">
+                <h1 className="text-2xl font-bold text-green-500">Points Dashboard</h1>
                 <select
-                    className="border px-3 py-1 rounded-md bg-white shadow-sm mt-4"
+                    className="border px-3 py-1 rounded-md bg-gray-800 text-green-300 shadow-sm mt-4"
                     value={selectedOption}
                     onChange={(e) => setSelectedOption(e.target.value)}
                 >
@@ -62,14 +67,14 @@ const PointsDashboard = () => {
                         </option>
                     ))}
                 </select>
-                <p className="text-red-500 mt-4">
+                <p className="text-red-400 mt-4">
                     ❌ Error: Could not fetch points. Check if `public/data/filename.json` exists.
                 </p>
             </div>
         );
     }
 
-    if (!points) return <p className="p-6">Loading...</p>;
+    if (!points) return <p className="p-6 text-green-300">Loading...</p>;
 
     const filteredHistory = filterHistory(points?.history || [], activeTab);
     const historyByYearAndMonth = groupHistoryByYearAndMonth(points.history);
@@ -97,23 +102,23 @@ const PointsDashboard = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 bg-green-50 min-h-screen">
+        <div className="p-6 space-y-6 bg-gray-900 min-h-screen text-green-300">
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-green-700">Points Dashboard</h1>
+                    <h1 className="text-3xl font-bold text-green-500">Points Dashboard</h1>
                     {lastUpdated && (
-                        <p className="text-sm text-green-600">
+                        <p className="text-sm text-green-400">
                             Last Updated: {new Date(lastUpdated).toLocaleString()}
                         </p>
                     )}
                 </div>
                 <div>
-                    <label htmlFor="userSelect" className="mr-2 font-medium text-green-700">
+                    <label htmlFor="userSelect" className="mr-2 font-medium text-green-400">
                         Select User:
                     </label>
                     <select
                         id="userSelect"
-                        className="border px-3 py-1 rounded-md bg-white shadow-sm"
+                        className="border px-3 py-1 rounded-md bg-gray-800 text-green-300 shadow-sm"
                         value={selectedOption}
                         onChange={(e) => setSelectedOption(e.target.value)}
                     >
@@ -125,235 +130,101 @@ const PointsDashboard = () => {
                     </select>
                 </div>
             </div>
+
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-white rounded-lg shadow">
-                    <p className="text-xl font-semibold text-green-700">Total Points:</p>
-                    <p className="text-2xl">{points.lastRecorded?.total || 0}</p>
-                </div>
-                <div className="p-4 bg-white rounded-lg shadow">
-                    <p className="text-xl font-semibold text-green-700">This Week:</p>
-                    <p className="text-2xl">{calculatePeriodTotal("This Week")}</p>
-                </div>
-                <div className="p-4 bg-white rounded-lg shadow">
-                    <p className="text-xl font-semibold text-green-700">This Month:</p>
-                    <p className="text-2xl">{calculatePeriodTotal("This Month")}</p>
-                </div>
-                <div className="p-4 bg-white rounded-lg shadow">
-                    <p className="text-xl font-semibold text-green-700">This Year:</p>
-                    <p className="text-2xl">{calculatePeriodTotal("This Year")}</p>
-                </div>
+                {[
+                    { label: "Total Points", value: points.lastRecorded?.total || 0 },
+                    { label: "This Week", value: calculatePeriodTotal("This Week") },
+                    { label: "This Month", value: calculatePeriodTotal("This Month") },
+                    { label: "This Year", value: calculatePeriodTotal("This Year") },
+                ].map((stat, index) => (
+                    <div key={index} className="p-4 bg-gray-800 rounded-lg shadow">
+                        <p className="text-xl font-semibold text-green-400">{stat.label}:</p>
+                        <p className="text-2xl font-bold text-green-500">{stat.value}</p>
+                    </div>
+                ))}
             </div>
+
             <div>
                 <a
                     href={`https://teamtreehouse.com/profiles/${selectedOption}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-green-600 hover:underline font-medium"
+                    className="text-green-400 hover:underline font-medium"
                 >
                     View {selectedOption}'s Profile
                 </a>
             </div>
-            <div>
-                {/* Tabs Navigation */}
-                <div className="flex space-x-4 border-b mb-4">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            className={`px-4 py-2 transition-colors duration-200 ${
-                                activeTab === tab
-                                    ? "border-b-4 border-green-500 font-bold text-green-700"
-                                    : "text-green-500 hover:text-green-700"
-                            }`}
-                            onClick={() => setActiveTab(tab)}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-                {activeTab === "All" ? (
-                    <div className="border rounded-lg p-4 bg-white shadow">
-                        {Object.keys(historyByYearAndMonth)
-                            .sort((a, b) => b - a)
-                            .map((year) => (
-                                <div key={year} className="mb-4">
-                                    <h3 className="text-xl font-bold border-b pb-1 text-green-700">
-                                        {year}
+
+            {/* Tabs Navigation */}
+            <div className="flex space-x-4 border-b border-green-700 mb-4">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab}
+                        className={`px-4 py-2 transition-colors duration-200 ${
+                            activeTab === tab
+                                ? "border-b-4 border-green-500 font-bold text-green-400"
+                                : "text-green-400 hover:text-green-500"
+                        }`}
+                        onClick={() => setActiveTab(tab)}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            {/* History Display */}
+            <div className="border rounded-lg p-4 bg-gray-800 shadow">
+                {filteredHistory.length > 0 ? (
+                    filteredHistory.map((entry, index) => {
+                        const earnedBadges = getBadgesForDate(entry.date);
+                        return (
+                            <div key={index} className="border-b border-green-700 py-2">
+                                <strong>{entry.date}:</strong> {entry.totalGained} points
+                                <div className="mt-2">
+                                    <h3 className="text-md font-semibold text-green-400">
+                                        📊 Points Breakdown:
                                     </h3>
-                                    {Object.keys(historyByYearAndMonth[year])
-                                        .sort(
-                                            (a, b) =>
-                                                new Date(`${b} 1, ${year}`) -
-                                                new Date(`${a} 1, ${year}`)
-                                        )
-                                        .map((month) => (
-                                            <div key={month} className="ml-4">
-                                                <button
-                                                    className="text-lg font-semibold text-green-600 hover:underline flex items-center"
-                                                    onClick={() => toggleMonthExpansion(year, month)}
-                                                >
-                                                    {expandedMonths[`${year}-${month}`]
-                                                        ? "▼"
-                                                        : "►"}{" "}
-                                                    {month}
-                                                </button>
-                                                {expandedMonths[`${year}-${month}`] && (
-                                                    <ul className="ml-6 mt-2 border-l pl-4">
-                                                        {historyByYearAndMonth[year][month].map(
-                                                            (entry, index) => {
-                                                                const earnedBadges =
-                                                                    getBadgesForDate(entry.date);
-                                                                return (
-                                                                    <li key={index} className="border-b py-2">
-                                                                        <strong>
-                                                                            {entry.date}:
-                                                                        </strong>{" "}
-                                                                        {entry.totalGained} points
-                                                                        <div className="mt-2">
-                                                                            <h3 className="text-md font-semibold text-green-700">
-                                                                                📊 Points Breakdown:
-                                                                            </h3>
-                                                                            {entry.pointsBreakdown &&
-                                                                            Object.keys(
-                                                                                entry.pointsBreakdown
-                                                                            ).length > 0 ? (
-                                                                                <ul className="list-disc ml-4">
-                                                                                    {Object.entries(
-                                                                                        entry.pointsBreakdown
-                                                                                    ).map(
-                                                                                        ([
-                                                                                            category,
-                                                                                            points,
-                                                                                        ]) => (
-                                                                                            <li key={category}>
-                                                                                                {category}:{" "}
-                                                                                                {points} points
-                                                                                            </li>
-                                                                                        )
-                                                                                    )}
-                                                                                </ul>
-                                                                            ) : (
-                                                                                <p className="text-green-500">
-                                                                                    No detailed breakdown
-                                                                                    available.
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="mt-2">
-                                                                            <h3 className="text-md font-semibold text-green-700">
-                                                                                🏅 Badges Earned:
-                                                                            </h3>
-                                                                            {earnedBadges.length > 0 ? (
-                                                                                <ul className="list-disc ml-4">
-                                                                                    {earnedBadges.map((badge) => (
-                                                                                        <li
-                                                                                            key={badge.id}
-                                                                                            className="flex items-center space-x-3"
-                                                                                        >
-                                                                                            <img
-                                                                                                src={
-                                                                                                    badge.icon_url
-                                                                                                }
-                                                                                                alt={
-                                                                                                    badge.name
-                                                                                                }
-                                                                                                className="w-6 h-6"
-                                                                                            />
-                                                                                            <a
-                                                                                                href={
-                                                                                                    badge.url
-                                                                                                }
-                                                                                                target="_blank"
-                                                                                                rel="noopener noreferrer"
-                                                                                                className="text-green-600 hover:underline"
-                                                                                            >
-                                                                                                {badge.name}
-                                                                                            </a>
-                                                                                        </li>
-                                                                                    ))}
-                                                                                </ul>
-                                                                            ) : (
-                                                                                <p className="text-green-500">
-                                                                                    No badges earned on this day.
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                    </li>
-                                                                );
-                                                            }
-                                                        )}
-                                                    </ul>
-                                                )}
-                                            </div>
-                                        ))}
+                                    {entry.pointsBreakdown &&
+                                    Object.keys(entry.pointsBreakdown).length > 0 ? (
+                                        <ul className="list-disc ml-4">
+                                            {Object.entries(entry.pointsBreakdown).map(
+                                                ([category, points]) => (
+                                                    <li key={category}>
+                                                        {category}: {points} points
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-green-500">No detailed breakdown available.</p>
+                                    )}
                                 </div>
-                            ))}
-                    </div>
+                                <div className="mt-2">
+                                    <h3 className="text-md font-semibold text-green-400">
+                                        🏅 Badges Earned:
+                                    </h3>
+                                    {earnedBadges.length > 0 ? (
+                                        <ul className="list-disc ml-4">
+                                            {earnedBadges.map((badge) => (
+                                                <li key={badge.id} className="flex items-center space-x-3">
+                                                    <img src={badge.icon_url} alt={badge.name} className="w-6 h-6" />
+                                                    <a href={badge.url} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline">
+                                                        {badge.name}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-green-500">No badges earned on this day.</p>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
                 ) : (
-                    <ul className="border rounded-lg p-4 bg-white shadow">
-                        {filteredHistory.length > 0 ? (
-                            filteredHistory.map((entry, index) => {
-                                const earnedBadges = getBadgesForDate(entry.date);
-                                return (
-                                    <li key={index} className="border-b py-2">
-                                        <strong>{entry.date}:</strong> {entry.totalGained} points
-                                        <div className="mt-2">
-                                            <h3 className="text-md font-semibold text-green-700">
-                                                📊 Points Breakdown:
-                                            </h3>
-                                            {entry.pointsBreakdown &&
-                                            Object.keys(entry.pointsBreakdown).length > 0 ? (
-                                                <ul className="list-disc ml-4">
-                                                    {Object.entries(entry.pointsBreakdown).map(
-                                                        ([category, points]) => (
-                                                            <li key={category}>
-                                                                {category}: {points} points
-                                                            </li>
-                                                        )
-                                                    )}
-                                                </ul>
-                                            ) : (
-                                                <p className="text-green-500">
-                                                    No detailed breakdown available.
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="mt-2">
-                                            <h3 className="text-md font-semibold text-green-700">
-                                                🏅 Badges Earned:
-                                            </h3>
-                                            {earnedBadges.length > 0 ? (
-                                                <ul className="list-disc ml-4">
-                                                    {earnedBadges.map((badge) => (
-                                                        <li key={badge.id} className="flex items-center space-x-3">
-                                                            <img
-                                                                src={badge.icon_url}
-                                                                alt={badge.name}
-                                                                className="w-6 h-6"
-                                                            />
-                                                            <a
-                                                                href={badge.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-green-600 hover:underline"
-                                                            >
-                                                                {badge.name}
-                                                            </a>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            ) : (
-                                                <p className="text-green-500">
-                                                    No badges earned on this day.
-                                                </p>
-                                            )}
-                                        </div>
-                                    </li>
-                                );
-                            })
-                        ) : (
-                            <p>No history available for {activeTab}.</p>
-                        )}
-                    </ul>
+                    <p>No history available for {activeTab}.</p>
                 )}
             </div>
         </div>
