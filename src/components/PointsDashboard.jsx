@@ -72,7 +72,7 @@ const PointsDashboard = () => {
     if (error) {
         return (
             <div className="dashboard-container">
-                <h1 className="dashboard-title">Points Dashboard</h1>
+                <h1 className="dashboard-title">Team TreeHouse Points Dashboard</h1>
                 <select className="dropdown" value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
                     {DROPDOWN_OPTIONS.map((option) => (
                         <option key={option} value={option}>
@@ -93,7 +93,7 @@ const PointsDashboard = () => {
     return (
         <div className="dashboard-container">
             <div className="header">
-                <h1 className="dashboard-title">Points Dashboard</h1>
+                <h1 className="dashboard-title">Team TreeHouse Points Dashboard</h1>
                 {lastUpdated && <p className="last-updated">Last Updated: {new Date(lastUpdated).toLocaleString()}</p>}
                 <select className="dropdown" value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
                     {DROPDOWN_OPTIONS.map((option) => (
