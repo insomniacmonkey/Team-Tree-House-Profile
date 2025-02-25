@@ -5,7 +5,7 @@ const path = require("path");
 const axios = require("axios");
 const trackPoints = require("./server/utils/trackPoints");
 
-const serverStartedAt = new Date();
+let lastUpdated = new Date();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -125,6 +125,8 @@ const fetchDataForProfiles = async () => {
                 continue;
             }
 
+            lastUpdated = new Date();
+
             // ✅ Ensure username is passed as a string
             const updatedData = trackPoints(username.toString(), {
                 points: newData.points,
@@ -188,7 +190,7 @@ app.use(express.static(buildPath));
 
 // last-updated API endpoint
 app.get('/api/last-updated', (req, res) => {
-    res.json({ lastUpdated: serverStartedAt.toISOString() });
+    res.json({ lastUpdated: lastUpdated.toISOString() });
 });
 
 // Serve index.html for any unknown routes

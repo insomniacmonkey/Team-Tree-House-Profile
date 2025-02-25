@@ -36,7 +36,7 @@ const PointsDashboard = () => {
             .then((res) => res.json())
             .then((data) => setLastUpdated(data.lastUpdated))
             .catch((error) => console.error("Error fetching last updated time:", error));
-    }, []);
+    }, [selectedOption]);
 
     if (error) {
         return (
