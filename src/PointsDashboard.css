@@ -1,0 +1,134 @@
+/* Background and General Styles */
+body {
+    background-color: #121a13; /* Dark greenish-black */
+    color: #a8f0a3; /* Light green text */
+    font-family: Arial, sans-serif;
+}
+
+.dashboard-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background-color: #1b2a1d; /* Dark green background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 255, 0, 0.2);
+}
+
+/* Header */
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    color: #6ae68a;
+    font-size: 24px;
+}
+
+.last-updated {
+    font-size: 14px;
+    color: #50c878;
+}
+
+/* Dropdown */
+.dropdown {
+    background-color: #263d27;
+    color: #a8f0a3;
+    border: 1px solid #50c878;
+    padding: 8px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background-color: #263d27;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 255, 0, 0.2);
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #50c878;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #6ae68a;
+}
+
+/* Profile Link */
+.profile-link {
+    display: block;
+    text-align: center;
+    margin: 20px 0;
+    color: #6ae68a;
+    text-decoration: none;
+}
+
+.profile-link:hover {
+    text-decoration: underline;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #a8f0a3;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+    color: #50c878;
+}
+
+.tab-button.active {
+    border-bottom: 2px solid #50c878;
+}
+
+/* History */
+.history-container {
+    background-color: #263d27;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.history-entry {
+    padding: 8px;
+    border-bottom: 1px solid #50c878;
+}
+
+/* Error & Loading */
+.error-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.loading {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 20px;
+    color: #a8f0a3;
+}
